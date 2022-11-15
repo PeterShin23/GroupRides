@@ -1,12 +1,29 @@
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from '../../firebase';
 
 const AuthScreen = () => {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+
+    const navigation = useNavigation()
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User is signed in, see docs for a list of available properties
+            // https://firebase.google.com/docs/reference/js/firebase.User
+            const uid = user.uid;
+            navigation.navigate("Home")
+            // ...
+        } else {
+            // User is signed out
+            // ...
+            navigation.navigate("Auth")
+        }
+    });
 
     const handleSignUp = () => {
         createUserWithEmailAndPassword(auth, email, password)
@@ -37,7 +54,7 @@ const AuthScreen = () => {
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
-                
+
                 console.log("LOGIN ERROR:")
                 console.log("Error Code: " + errorCode + "\nError Message: " + errorMessage)
                 alert("Could not find user with entered email/password. Please try again with different credentials.")

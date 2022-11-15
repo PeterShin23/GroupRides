@@ -18,10 +18,44 @@ const Stack = createNativeStackNavigator();
 // "Home" screens need to be nested in a stack navigator for login/register func.
 function Home() {
   return (
-    <bottomTab.Navigator>
+    <bottomTab.Navigator
+      screenOptions={ ({ route }) => ({
+        tabBarIcon: ({ focused, color }) => {
+          let iconName; 
+          let iconSize;
+          
+          if (route.name === 'My Events') {
+            iconName = focused
+              ? 'today'
+              : 'today-outline';
+            iconSize = focused
+              ? 30
+              : 28;
+          } 
+          else if (route.name === 'My Organizations') {
+            iconName = focused
+              ? 'earth'
+              : 'earth-outline';
+            iconSize = focused
+              ? 30
+              : 28;
+          }
+          else if (route.name === 'My Profile') {
+            iconName = focused
+              ? 'person'
+              : 'person-outline';
+            iconSize = focused
+              ? 30
+              : 28;
+          }
+
+          return <Ionicons name={iconName} size={iconSize}></Ionicons>;
+        },
+        tabBarShowLabel: false,
+        })}>
       <bottomTab.Screen name='My Events' component={EventListScreen}></bottomTab.Screen>
       <bottomTab.Screen name='My Organizations' component={OrgListScreen}></bottomTab.Screen>
-      <bottomTab.Screen name='My User Profile' component={UserProfileScreen}></bottomTab.Screen>
+      <bottomTab.Screen name='My Profile' component={UserProfileScreen}></bottomTab.Screen>
     </bottomTab.Navigator>
   );
 }
@@ -29,47 +63,6 @@ function Home() {
 export default function App() {
   return (
     <NavigationContainer>
-      <bottomTab.Navigator
-        screenOptions={ ({ route }) => ({
-          tabBarIcon: ({ focused, color }) => {
-            let iconName; 
-            let iconSize;
-            
-            if (route.name === 'My Events') {
-              iconName = focused
-                ? 'today'
-                : 'today-outline';
-              iconSize = focused
-                ? 25
-                : 22;
-            } 
-            else if (route.name === 'My Organizations') {
-              iconName = focused
-                ? 'earth'
-                : 'earth-outline';
-              iconSize = focused
-                ? 25
-                : 22;
-            }
-            else if (route.name === 'My Profile') {
-              iconName = focused
-                ? 'person'
-                : 'person-outline';
-              iconSize = focused
-                ? 25
-                : 22;
-            }
-
-            return <Ionicons name={iconName} size={iconSize}></Ionicons>;
-          },
-          tabBarShowLabel: false,
-        })}
-        >
-        <bottomTab.Screen name='My Events' component={EventListScreen} ></bottomTab.Screen>
-        <bottomTab.Screen name='My Organizations' component={OrgListScreen}></bottomTab.Screen>
-        <bottomTab.Screen name='My Profile' component={UserProfileScreen}></bottomTab.Screen>
-      </bottomTab.Navigator>
-
       <Stack.Navigator>
         <Stack.Screen
           name='Auth'

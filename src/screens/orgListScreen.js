@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight } from 'react-native';
-import { darkTheme } from '../../utils/colors';
+// import { darkTheme } from '../../utils/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 

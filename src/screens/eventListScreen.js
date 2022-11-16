@@ -33,7 +33,7 @@ export default function EventListScreen() {
     <View style={styles.body}>
       <FlatList
         showsVerticalScrollingIndicator={true}
-        contentContainerStyle={{padding:20, paddingBottom:100}}
+        contentContainerStyle={{padding:15, paddingBottom:100}}
         data={eventItems.sort((a,b) => a.date-b.date)} 
         renderItem={({item}) => <EventItem item={item} />}
       />
@@ -43,17 +43,19 @@ export default function EventListScreen() {
 const styles = StyleSheet.create({
   body: {
     flex: 1,
+    backgroundColor: 'white',
   },
   text: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '500',
     textAlign: 'left',
   },
   eventItem: {
     padding: 20,
     flexDirection: 'row',
-    elevation: 1,
-    borderRadius: 7,
+    elevation: 4,
+    borderRadius: 8,
     marginVertical: 10,
+    backgroundColor: 'white'
   },
 })

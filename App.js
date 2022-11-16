@@ -1,22 +1,25 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
+// import { TouchableOpacity } from 'react-native-gesture-handler';
 import { NavigationContainer, TabActions } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // https://ionic.io/ionicons
 
 import { darkTheme } from './utils/colors';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import EventListScreen from './src/screens/eventListScreen';
 import OrgListScreen from './src/screens/orgListScreen';
 import UserProfileScreen from './src/screens/userProfileScreen';
 import AuthScreen from './src/screens/authScreen';
+import NewEventScreen from './src/screens/newEventScreen';
+import NewOrgScreen from './src/screens/newOrgScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 // "Home" screens need to be nested in a stack navigator for login/register func.
-function Home() {
+function Home({navigation}) {
   return (
     <bottomTab.Navigator
       screenOptions={ ({ route }) => ({
@@ -53,8 +56,30 @@ function Home() {
         },
         tabBarShowLabel: false,
         })}>
-      <bottomTab.Screen name='My Events' component={EventListScreen}></bottomTab.Screen>
-      <bottomTab.Screen name='My Organizations' component={OrgListScreen}></bottomTab.Screen>
+      <bottomTab.Screen 
+        name='My Events' 
+        component={EventListScreen} 
+        options={{
+          headerRight: () => (
+            <View>
+              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event')}>
+                <Text style={styles.headerRightText}>New</Text>
+              </TouchableOpacity>
+            </View>
+          )
+        }}></bottomTab.Screen>
+      <bottomTab.Screen 
+        name='My Organizations' 
+        component={OrgListScreen}
+        options={{
+          headerRight: () => (
+            <View>
+              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Org')}>
+                <Text style={styles.headerRightText}>New</Text>
+              </TouchableOpacity>
+            </View>
+          )
+        }}></bottomTab.Screen>
       <bottomTab.Screen name='My Profile' component={UserProfileScreen}></bottomTab.Screen>
     </bottomTab.Navigator>
   );
@@ -80,6 +105,14 @@ export default function App() {
             gestureEnabled: false
           }}
         />
+        <Stack.Screen
+          name="New Event"
+          component={NewEventScreen}
+        />
+        <Stack.Screen
+          name="New Org"
+          component={NewOrgScreen}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -91,5 +124,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addButton: {
+    width: 70,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center', 
+    marginRight: 15,
+  },
+  headerRightText: {
+    fontSize: 15,
+    textAlign: 'center',
+    color: 'white',
   },
 });

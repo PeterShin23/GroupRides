@@ -7,7 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // https://ionic.io/ionicons
 
-import { darkTheme } from './utils/colors';
+// import { darkTheme } from './utils/colors';
 import EventListScreen from './src/screens/eventListScreen';
 import OrgListScreen from './src/screens/orgListScreen';
 import UserProfileScreen from './src/screens/userProfileScreen';

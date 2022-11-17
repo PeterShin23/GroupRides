@@ -1,9 +1,27 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { ref as dbref, child, get } from 'firebase/database';
+import { auth, db, storage } from '../../firebase';
+import { Entypo } from '@expo/vector-icons';
 
 export default function UserProfileScreen() {
+
+  const [username, setUsername] = useState('')
+  const [profilePic, setProfilePic] = useState(null)
+
+  useEffect(() => {
+    if (auth.currentUser) {
+      const uid = auth.currentUser.uid
+      const ref = dbref(db)
+      get(child(ref, `users/${uid}`)).then((snapshot) => {
+        setUsername(snapshot.val().username)
+        setProfilePic(snapshot.val().profile_picture)
+      }).catch((error) => {
+        console.log(error)
+      })
+    }
+  }, [])
 
   const handleSignOut = () => {
     signOut(auth).then(() => {
@@ -13,9 +31,36 @@ export default function UserProfileScreen() {
     });
   }
 
+  // Function from expo documentation: https://docs.expo.dev/versions/latest/sdk/imagepicker/
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    console.log(result);
+    if (!result.canceled) {
+      setProfilePic(result.assets[0].uri);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <Text>Users will see their stuff here!</Text>
+      <View style={styles.imagePicker}>
+        {
+          profilePic && <Image source={{ uri: profilePic }} style={{ width: 200, height: 200 }} />
+        }
+        <View style={styles.uploadBtnContainer}>
+          <TouchableOpacity onPress={pickImage} style={styles.uploadBtn} >
+            <Text>{profilePic ? 'Edit' : 'Upload'} Profile Picture</Text>
+            <Entypo name="image" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <Text>Good to see you, {username}!</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.signOutButton}
@@ -57,4 +102,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16
   },
+  imageIcon: {
+    marginTop: 25
+  },
+  imagePicker: {
+    height: 200,
+    width: 200,
+    backgroundColor: 'white',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: 10
+  },
+  uploadBtnContainer: {
+    opacity: 0.7,
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'lightgrey',
+    width: '100%',
+    height: '30%',
+  },
+  uploadBtn: {
+    display: 'flex',
+    alignItems: "center",
+    justifyContent: 'center'
+  }
 });

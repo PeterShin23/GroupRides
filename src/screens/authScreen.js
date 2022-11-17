@@ -1,7 +1,7 @@
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from '../../firebase';
 
 const AuthScreen = () => {
@@ -26,21 +26,7 @@ const AuthScreen = () => {
     });
 
     const handleSignUp = () => {
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed in 
-                const user = userCredential.user;
-                console.log(user.email + " has signed in!")
-                // ...
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                // ..
-                console.log("SIGNUP ERROR:")
-                console.log("Error Code: " + errorCode + "\nError Message: " + errorMessage)
-                alert("Please make sure your email is in the corrent format and/or that your password is at least 6 characters.")
-            });
+        navigation.navigate("Register")
     }
 
     const handleLogin = () => {

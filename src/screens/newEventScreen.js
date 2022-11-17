@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
-
+import { ref, set } from 'firebase/database';
+import { auth, db } from '../../firebase';
 
 export default function NewEventScreen() {
 

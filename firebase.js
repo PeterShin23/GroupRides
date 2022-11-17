@@ -1,6 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
+import { getDatabase } from "firebase/database";
+import { getStorage } from 'firebase/storage'
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -21,3 +23,7 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app)
 // Idk how to get this working, just don't use android emulator for testing
 // connectAuthEmulator(auth, "http://10.0.2.2:9099")
+
+export const db = getDatabase(app)
+
+export const storage = getStorage(app)

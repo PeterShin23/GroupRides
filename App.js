@@ -14,6 +14,7 @@ import UserProfileScreen from './src/screens/userProfileScreen';
 import AuthScreen from './src/screens/authScreen';
 import NewEventScreen from './src/screens/newEventScreen';
 import NewOrgScreen from './src/screens/newOrgScreen';
+import RegisterScreen from './src/screens/registerScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -94,6 +95,13 @@ export default function App() {
           component={AuthScreen}
           options={{
             headerTitle: "Welcome! Please Login or Register.",
+          }}
+        />
+        <Stack.Screen
+          name='Register'
+          component={RegisterScreen}
+          options={{
+            headerTitle: "Create your account!"
           }}
         />
         <Stack.Screen

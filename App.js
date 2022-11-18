@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
-// import { TouchableOpacity } from 'react-native-gesture-handler';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
+import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import { NavigationContainer, TabActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,6 +22,7 @@ const Stack = createNativeStackNavigator();
 
 // "Home" screens need to be nested in a stack navigator for login/register func.
 function Home({navigation}) {
+
   return (
     <bottomTab.Navigator
       screenOptions={ ({ route }) => ({
@@ -64,11 +66,13 @@ function Home({navigation}) {
           headerRight: () => (
             <View>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event')}>
+              {/* <TouchableOpacity style={styles.addButton} onPress={() => NewEventScreen()}> */}
                 <Text style={styles.headerRightText}>New</Text>
               </TouchableOpacity>
             </View>
           )
-        }}></bottomTab.Screen>
+        }}
+      ></bottomTab.Screen>
       <bottomTab.Screen 
         name='My Organizations' 
         component={OrgListScreen}

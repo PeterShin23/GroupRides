@@ -1,13 +1,65 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
+// import DatePicker from 'react-native-date-picker';
+import DateTimePicker from '@react-native-community/datetimepicker'
+import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import { ref, set } from 'firebase/database';
 import { auth, db } from '../../firebase';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 
 export default function NewEventScreen() {
 
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [destination, setDestination] = useState('')
+  const [dateText, setDateText] = useState('Select Event Date') 
+  const [date, setDate] = useState(new Date())
+  const [open, setOpen] = useState(false)
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setOpen(Platform.OS === 'ios');
+    setDate(currentDate)
+
+    let tempDate = new Date(currentDate)
+    let formattedDate = tempDate.getMonth()+1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
+    setDateText(formattedDate)
+  }
+
   return (
     <View style={styles.body}>
-      <Text style={styles.text}>This is the create event screen</Text>
+      <TextInput 
+          style={styles.input} 
+          placeholder="Event Name"
+          value={name}
+          onChangeText={(value) => setName(value)}    
+      ></TextInput>
+      <TextInput 
+          style={styles.input} 
+          placeholder="Event Description"
+          value={description}
+          onChangeText={(value) => setDescription(value)}    
+      ></TextInput>
+      <TextInput 
+          style={styles.input} 
+          placeholder="Event Destination"
+          value={destination}
+          onChangeText={(value) => setDestination(value)}    
+      ></TextInput>
+      <Pressable onPress={() => setOpen(true)}>
+          <Text style={styles.text}>{dateText}</Text>
+      </Pressable>
+      {open && 
+        <RNDateTimePicker 
+        mode="date"
+        display="default"
+        value={new Date()}
+        onChange={onDateChange}
+        />
+      }
+      <TouchableOpacity style={styles.button} onPress={() => onSavePressHandler()}>
+        <Text style={styles.buttonText}>Save</Text>
+      </TouchableOpacity>
     </View>
   )
 }
@@ -15,18 +67,31 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     backgroundColor: 'white',
+    alignItems: 'center',
+    paddingTop: 50,
   },
-  text: {
+  input: {
+    width: '100%',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    textAlign: 'left',
     fontSize: 20,
-    fontWeight: '500',
-    textAlign: 'center',
+    margin: 20,
+    paddingHorizontal: 10,
   },
-  eventItem: {
-    padding: 20,
-    flexDirection: 'row',
-    elevation: 4,
-    borderRadius: 8,
-    marginVertical: 10,
-    backgroundColor: 'white'
+  button: {
+    width: 90,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center', 
+    position: 'absolute',
+    bottom: 40,
+    elevation: 2,
+  },
+  buttonText: {
+    color: '#eef5db',
+    fontSize: 16,
   },
 })

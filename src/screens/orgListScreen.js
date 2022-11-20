@@ -1,17 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight } from 'react-native';
 // import { darkTheme } from '../../utils/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import { getDatabase, ref, set } from 'firebase/database';
+import { auth, db, storage } from '../../firebase';
+import { get } from 'react-native-extra-dimensions-android';
+
 
 export default function OrgListScreen() {
 
-  const testOrgs  = [
-    {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
-    {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
-  ]
+  // const testOrgs  = [
+  //   {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
+  //   {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
+  // ]
 
-  const [orgItems, setOrgItems] = useState(testOrgs)
+  // const [orgItems, setOrgItems] = useState(testOrgs)
+
+  const [orgItems, setOrgItems] = useState([])
+
+  useEffect(() => {
+    // const db = getDatabase()
+    // const user = auth.currentUser
+    
+    // const organizationRef = ref(db, `organization/` + id);
+    // onValue(organizationRef, (snapshot) => {
+    //   const
+    
+    // })
+  })
+  // useEffect(() => {
+  //   if (auth.currentUser) {
+  //     const user = auth.currentUser
+
+  //   }
+  // }, [])
+
+  // const db = getDatabase()
+  // const user = auth.currentUser
+  // set(ref(db, 'organizations/' + user.uid), {
+  //   name: name,
+  //   id: id,
+  //   favorite: false,
+  // })
+
+
 
   const markItemFavorite = itemId => {
     const newItem = orgItems.map(item => {

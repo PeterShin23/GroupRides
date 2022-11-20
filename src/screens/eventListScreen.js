@@ -1,6 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
-// import { darkTheme } from '../../utils/colors';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, StatusBar, Dimensions,} from 'react-native';
+import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
+import Modal from 'react-native-modal';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
+import { SafeAreaView } from 'react-navigation';
+import { onValue, ref, set } from 'firebase/database';
+import { auth, db, storage } from '../../firebase';
 
 
 export default function EventListScreen() {
@@ -10,7 +16,15 @@ export default function EventListScreen() {
     {id: '2', name: "testEvent2", date: "20221203", description: "", destination: ""},
   ]
 
-  const [eventItems, setItems] = useState(testEvents)
+  const [eventItems, setEventItems] = useState(testEvents)
+
+  // useEffect(() => {
+  //   return onValue(ref(db, '/events'), querySnapShot => {
+  //     let data = querySnapShot.val() || {testEvents};
+  //     let events = {...data};
+  //     setEventItems(events)
+  //   });
+  // }, []);
 
   const EventItem = ({item}) => {
     return (
@@ -57,5 +71,48 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 10,
     backgroundColor: 'white'
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+  },
+  sheetContainer: {
+    // flex: 1,
+    alignItems: 'center',
+  },
+  input: {
+    width: '100%',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    textAlign: 'left',
+    fontSize: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+  },
+  button: {
+    width: 90,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
   },
 })

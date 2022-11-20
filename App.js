@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, SafeAreaView, Modal } from 'react-native';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import { NavigationContainer, TabActions } from '@react-navigation/native';
@@ -26,9 +26,10 @@ function Home({navigation}) {
   return (
     <bottomTab.Navigator
       screenOptions={ ({ route }) => ({
-        tabBarIcon: ({ focused, color }) => {
+        tabBarIcon: ({ focused }) => {
           let iconName; 
           let iconSize;
+          let iconColor;
           
           if (route.name === 'My Events') {
             iconName = focused
@@ -37,6 +38,9 @@ function Home({navigation}) {
             iconSize = focused
               ? 30
               : 28;
+            iconColor = focused
+              ? '#49b3b3'
+              : '#000'
           } 
           else if (route.name === 'My Organizations') {
             iconName = focused
@@ -45,6 +49,9 @@ function Home({navigation}) {
             iconSize = focused
               ? 30
               : 28;
+            iconColor = focused
+              ? '#49b3b3'
+              : '#000'
           }
           else if (route.name === 'My Profile') {
             iconName = focused
@@ -53,9 +60,12 @@ function Home({navigation}) {
             iconSize = focused
               ? 30
               : 28;
+            iconColor = focused
+              ? '#49b3b3'
+              : '#000'
           }
 
-          return <Ionicons name={iconName} size={iconSize}></Ionicons>;
+          return <Ionicons name={iconName} size={iconSize} color={iconColor}></Ionicons>;
         },
         tabBarShowLabel: false,
         })}>
@@ -66,7 +76,6 @@ function Home({navigation}) {
           headerRight: () => (
             <View>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event')}>
-              {/* <TouchableOpacity style={styles.addButton} onPress={() => NewEventScreen()}> */}
                 <Text style={styles.headerRightText}>New</Text>
               </TouchableOpacity>
             </View>

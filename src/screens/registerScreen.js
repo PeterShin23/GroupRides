@@ -35,6 +35,8 @@ const RegisterScreen = () => {
                 // ..
                 console.log("SIGNUP ERROR:")
                 console.log("Error Code: " + errorCode + "\nError Message: " + errorMessage)
+
+                // TODO: alert needs to match error message
                 alert("Please make sure your email is in the corrent format and/or that your password is at least 6 characters.")
             });
     }

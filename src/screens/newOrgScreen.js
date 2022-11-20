@@ -1,10 +1,51 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { getDatabase, ref, set, onValue } from 'firebase/database';
+import { auth, db, storage } from '../../firebase';
 
-export default function NewOrgScreen() {
+export default function NewOrgScreen({navigation}) {
 
   const [name, setName] = useState('')
   const [id, setId] = useState('')
+  const [idExistsText, setIdExistsText] = useState('this ID already exists!')
+  const [idExistsBool, setIdExistsBool] = useState(false)
+
+  function onCreateOrgHandler() {
+    const db = getDatabase()
+    const user = auth.currentUser
+    
+    // check if the organization id is unique
+    const organizationRef = ref(db, `organization/` + id);
+    onValue(organizationRef, (snapshot) => {
+      const organization = snapshot.val()
+      if (organization !== null) {
+        console.log('id already exists')
+
+        // TODO: Works fine when the organization with the id doesn't exist.
+        // For some reason, this alert pops up after an org with a unique id is made.
+        // Need to fix this alert or change the way we display the error.
+        // 'react-native-material-textfield' seems pretty useful for this.
+        // Alert.alert('This ID already exists!')
+      }
+      else {
+        console.log('organization does not exist yet')
+
+        // create organization for all users to find
+        set(ref(db, 'organization/' + id), {
+          name: name
+        })
+
+        // link this organization to creator
+        set(ref(db, 'user2organization/' + user.uid), {
+          memberType: 'admin',
+          orgId: id,
+          favorite: false,
+        })
+
+        navigation.navigate('My Organizations')
+      }
+    })
+  }
 
   return (
     <View style={styles.body}>
@@ -16,12 +57,12 @@ export default function NewOrgScreen() {
       ></TextInput>
       <TextInput 
           style={styles.input} 
-          placeholder="example: @myOrgId1234"
+          placeholder="example: myOrgId1234"
           value={id}
           onChangeText={(value) => setId(value)}    
       ></TextInput>
-      <TouchableOpacity style={styles.button} onPress={() => onSavePressHandler()}>
-        <Text style={styles.buttonText}>Save</Text>
+      <TouchableOpacity style={styles.button} onPress={() => onCreateOrgHandler()}>
+        <Text style={styles.buttonText}>Create</Text>
       </TouchableOpacity>
     </View>
   )

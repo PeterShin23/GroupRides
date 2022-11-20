@@ -1,10 +1,10 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
 // import DatePicker from 'react-native-date-picker';
 import DateTimePicker from '@react-native-community/datetimepicker'
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
-import { ref, set } from 'firebase/database';
-import { auth, db } from '../../firebase';
+import { onValue, ref, set } from 'firebase/database';
+import { auth, db, storage } from '../../firebase';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 
 export default function NewEventScreen() {
@@ -12,6 +12,23 @@ export default function NewEventScreen() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [destination, setDestination] = useState('')
+
+  const [events, setEvents] = useState({})
+  const [presentEvent, setPresentEvent] = useState('')
+
+  function addEvent() {
+    setPresentEvent('')
+  }
+
+  useEffect(() => {
+    return onValue(ref(db, '/events'), querySnapShot => {
+      let data = querySnapShot.val() || {};
+      let events = {...data};
+      setEvents(events)
+    });
+  }, []);
+
+  // date
   const [dateText, setDateText] = useState('Select Event Date') 
   const [date, setDate] = useState(new Date())
   const [open, setOpen] = useState(false)

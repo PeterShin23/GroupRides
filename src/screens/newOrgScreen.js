@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { getDatabase, ref, onValue, set, push, child, getMetadata } from 'firebase/database';
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 
 export default function NewOrgScreen({navigation}) {

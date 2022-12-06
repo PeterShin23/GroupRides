@@ -1,12 +1,12 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { getDatabase, ref, set, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, set, push, child, getMetadata } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 
 export default function NewOrgScreen({navigation}) {
 
-  const [name, setName] = useState('')
-  const [id, setId] = useState('')
+  const [oName, setOname] = useState('')
+  const [oId, setOid] = useState('')
   const [idExistsText, setIdExistsText] = useState('this ID already exists!')
   const [idExistsBool, setIdExistsBool] = useState(false)
 
@@ -15,10 +15,28 @@ export default function NewOrgScreen({navigation}) {
     const user = auth.currentUser
     
     // check if the organization id is unique
-    const organizationRef = ref(db, `organization/` + id);
+    const organizationRef = ref(db, `organization/` + oId);
     onValue(organizationRef, (snapshot) => {
       const organization = snapshot.val()
-      if (organization !== null) {
+      if (organization === null) {
+        console.log('organization does not exist yet')
+
+        // create organization for all users to find
+        set(ref(db, 'organization/' + oId), {
+          name: oName
+        })
+
+        // link this organization to creator
+        const user2orgRef = ref(db, `user2organization/${user.uid}/${oId}`);
+        set(user2orgRef, {
+          favorite: false,
+          memberType: "admin"      
+        })
+        
+        navigation.navigate('My Organizations')
+      }
+      else {
+        // TODO: Why is this code being reached if it already entered the if statement above?
         console.log('id already exists')
 
         // TODO: Works fine when the organization with the id doesn't exist.
@@ -26,23 +44,6 @@ export default function NewOrgScreen({navigation}) {
         // Need to fix this alert or change the way we display the error.
         // 'react-native-material-textfield' seems pretty useful for this.
         // Alert.alert('This ID already exists!')
-      }
-      else {
-        console.log('organization does not exist yet')
-
-        // create organization for all users to find
-        set(ref(db, 'organization/' + id), {
-          name: name
-        })
-
-        // link this organization to creator
-        set(ref(db, 'user2organization/' + user.uid), {
-          memberType: 'admin',
-          orgId: id,
-          favorite: false,
-        })
-
-        navigation.navigate('My Organizations')
       }
     })
   }
@@ -52,14 +53,14 @@ export default function NewOrgScreen({navigation}) {
       <TextInput 
           style={styles.input} 
           placeholder="Organization Name"
-          value={name}
-          onChangeText={(value) => setName(value)}    
+          value={oName}
+          onChangeText={(value) => setOname(value)}    
       ></TextInput>
       <TextInput 
           style={styles.input} 
           placeholder="example: myOrgId1234"
-          value={id}
-          onChangeText={(value) => setId(value)}    
+          value={oId}
+          onChangeText={(value) => setOid(value)}    
       ></TextInput>
       <TouchableOpacity style={styles.button} onPress={() => onCreateOrgHandler()}>
         <Text style={styles.buttonText}>Create</Text>

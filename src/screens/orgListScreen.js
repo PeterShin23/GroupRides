@@ -10,14 +10,14 @@ import { get } from 'react-native-extra-dimensions-android';
 
 export default function OrgListScreen() {
 
-  // const testOrgs  = [
-  //   {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
-  //   {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
-  // ]
+  const testOrgs  = [
+    {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
+    {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
+  ]
 
-  // const [orgItems, setOrgItems] = useState(testOrgs)
+  const [orgItems, setOrgItems] = useState(testOrgs)
 
-  const [orgItems, setOrgItems] = useState([])
+  // const [orgItems, setOrgItems] = useState([])
 
   useEffect(() => {
     // const db = getDatabase()

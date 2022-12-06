@@ -1,11 +1,11 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
-// import DatePicker from 'react-native-date-picker';
-import DateTimePicker from '@react-native-community/datetimepicker'
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import { onValue, ref, set } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
+
+import uid from '../../utils/uid';
 
 export default function NewEventScreen() {
 
@@ -14,11 +14,6 @@ export default function NewEventScreen() {
   const [destination, setDestination] = useState('')
 
   const [events, setEvents] = useState({})
-  const [presentEvent, setPresentEvent] = useState('')
-
-  function addEvent() {
-    setPresentEvent('')
-  }
 
   useEffect(() => {
     return onValue(ref(db, '/events'), querySnapShot => {
@@ -31,16 +26,43 @@ export default function NewEventScreen() {
   // date
   const [dateText, setDateText] = useState('Select Event Date') 
   const [date, setDate] = useState(new Date())
-  const [open, setOpen] = useState(false)
+  const [dateOpen, setDateOpen] = useState(false)
 
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
-    setOpen(Platform.OS === 'ios');
+    setDateOpen(Platform.OS === 'ios');
     setDate(currentDate)
 
     let tempDate = new Date(currentDate)
+    console.log(tempDate)
     let formattedDate = tempDate.getMonth()+1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
     setDateText(formattedDate)
+  }
+
+  // time
+  const [timeText, setTimeText] = useState('Select Event Time') 
+  const [time, setTime] = useState(new Date())
+  const [timeOpen, setTimeOpen] = useState(false)
+
+  const onTimeChange = (event, selectedTime) => {
+    const currentTime = selectedTime || time;
+    setTimeOpen(Platform.OS === 'ios');
+    setTime(currentTime)
+
+    let tempTime = new Date(currentTime)
+    // console.log(tempTime)
+    let tempHours = tempTime.getHours()
+    let amPm = "AM"
+    if (tempHours > 12) {
+      tempHours = tempHours - 12
+      amPm = "PM"
+    }
+    let formattedTime = tempHours + ":" + tempTime.getMinutes() + amPm
+    setTimeText(formattedTime) 
+  }
+
+  function onCreateEventHandler() {
+    console.log("create event")
   }
 
   return (
@@ -53,20 +75,14 @@ export default function NewEventScreen() {
       ></TextInput>
       <TextInput 
           style={styles.input} 
-          placeholder="Event Description"
-          value={description}
-          onChangeText={(value) => setDescription(value)}    
-      ></TextInput>
-      <TextInput 
-          style={styles.input} 
           placeholder="Event Destination"
           value={destination}
           onChangeText={(value) => setDestination(value)}    
       ></TextInput>
-      <Pressable onPress={() => setOpen(true)}>
+      <Pressable onPress={() => setDateOpen(true)}>
           <Text style={styles.text}>{dateText}</Text>
       </Pressable>
-      {open && 
+      {dateOpen && 
         <RNDateTimePicker 
         mode="date"
         display="default"
@@ -74,7 +90,18 @@ export default function NewEventScreen() {
         onChange={onDateChange}
         />
       }
-      <TouchableOpacity style={styles.button} onPress={() => onSavePressHandler()}>
+      <Pressable onPress={() => setTimeOpen(true)}>
+          <Text style={styles.text}>{timeText}</Text>
+      </Pressable>
+      {timeOpen && 
+        <RNDateTimePicker 
+        mode="time"
+        display="default"
+        value={new Date()}
+        onChange={onTimeChange}
+        />
+      }
+      <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
     </View>

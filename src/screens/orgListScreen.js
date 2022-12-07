@@ -3,60 +3,100 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight 
 // import { darkTheme } from '../../utils/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import { getDatabase, ref, set } from 'firebase/database';
+import { getDatabase, ref, onValue, set, update } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
-import { get } from 'react-native-extra-dimensions-android';
 
 
 export default function OrgListScreen() {
 
-  const testOrgs  = [
-    {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
-    {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
-  ]
+  // list of organizations
+  // const testOrgs  = [
+  //   {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
+  //   {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
+  // ]
+  // const [orgItems, setOrgItems] = useState(testOrgs)
+  const [userOrganizations, setUserOrganizations] = useState([])
 
-  const [orgItems, setOrgItems] = useState(testOrgs)
+  function getUserOrganizations() {
+    const db = getDatabase()
+    const user = auth.currentUser
+    
+    // get all organizations of user
+    let userOrgs = []
+    const user2orgRef = ref(db, `user2organization/${user.uid}`);
+    onValue(user2orgRef, (snapshot) => {
+      if (snapshot.val() === null) {
+        console.log("user is not part of any organizations")
+      } else {
+        // get information about organization
+        for (var orgId in snapshot.val()) {
 
-  // const [orgItems, setOrgItems] = useState([])
+          // get information from user2organization
+          const favorite = snapshot.val()[orgId]['favorite']
+          const memberType = snapshot.val()[orgId]['memberType']
+
+          const orgRef = ref(db, `organization/${orgId}`)
+          onValue(orgRef, (ss) => {
+            if (ss.val() === null) {
+              console.log('no such organization found')
+            } else {
+              // get info from organization
+              const orgName = ss.val()['name']
+
+              // put together information
+              const orgInfo = {
+                id: orgId,
+                name: orgName,
+                favorite: favorite,
+                memberType: memberType
+              }
+
+              // push to temp list of orgs
+              userOrgs.push({label: orgId, value: orgInfo})
+            }
+          })
+        }
+      }
+    })
+    console.log(userOrgs)
+    setUserOrganizations(userOrgs)
+  }
 
   useEffect(() => {
+    getUserOrganizations();
+    // markItemFavorite();
+  }, []);
+
+  const markItemFavorite = orgId => {
+    console.log('marking favorite')
     // const db = getDatabase()
     // const user = auth.currentUser
-    
-    // const organizationRef = ref(db, `organization/` + id);
-    // onValue(organizationRef, (snapshot) => {
-    //   const
-    
+
+    // const markFavoriteOrgRef = ref(db, `user2organization/${user.uid}/${orgId}`);
+    // onValue(markFavoriteOrgRef, (snapshot) => {
+    //   if (snapshot.val() === null) {
+    //     console.log('check ref path')
+    //   } else {
+    //     // update(markFavoriteOrgRef, {
+    //     //   favorite: !snapshot.val()['favorite']
+    //     // })
+    //   }
     // })
-  })
-  // useEffect(() => {
-  //   if (auth.currentUser) {
-  //     const user = auth.currentUser
+    // // getUserOrganizations()
+  }
 
-  //   }
-  // }, [])
+  // works with test orgs
+  // const markItemFavorite = itemId => {
+  //   const newItem = orgItems.map(item => {
+  //       if (item.id == itemId) {
+  //         return {...item, favorite: !item.favorite};
+  //       }
+  //       return item;
+  //   });
+  //   setOrgItems(newItem);
+  // };
 
-  // const db = getDatabase()
-  // const user = auth.currentUser
-  // set(ref(db, 'organizations/' + user.uid), {
-  //   name: name,
-  //   id: id,
-  //   favorite: false,
-  // })
-
-
-
-  const markItemFavorite = itemId => {
-    const newItem = orgItems.map(item => {
-        if (item.id == itemId) {
-          return {...item, favorite: !item.favorite};
-        }
-        return item;
-    });
-    setOrgItems(newItem);
-  };
-
-  const OrgItem = ({item}) => {
+  const OrganizationItem = ({item}) => {
     return (
     <View style={styles.orgItem}>
         <View >
@@ -68,25 +108,25 @@ export default function OrgListScreen() {
               }]
             }
           > 
-            <Text style={styles.orgLetter}>{item?.name.substring(0,1).toUpperCase()}</Text>
+            <Text style={styles.orgLetter}>{item['value']['name'].substring(0,1).toUpperCase()}</Text>
           </TouchableHighlight>
         </View>
         <View style={{flex:1, marginLeft:10}}>
             <Text style={styles.nameText}>
-                {item?.name}
+                {item['value']['name']}
             </Text>
             <Text style={styles.idText}>
-                @{item?.id}
+                @{item['value']['id']}
             </Text>
         </View>
         <View>
-          {item?.favorite && (
-            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item.id) }}>
+          {item['value']['favorite'] && (
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id']) }}>
               <Ionicons name='star' size={25} color={'#ffcd3c'}></Ionicons>
             </TouchableOpacity>
           )}
-          {!item?.favorite && (
-            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item.id) }}>
+          {!item['value']['favorite'] && (
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id']) }}>
               <Ionicons name='star-outline' size={25} color={'#ffcd3c'}></Ionicons>
             </TouchableOpacity>
           )}
@@ -101,8 +141,8 @@ export default function OrgListScreen() {
       <FlatList
         showsVerticalScrollingIndicator={true}
         contentContainerStyle={{padding:10, paddingBottom:100}}
-        data={orgItems.sort((a,b) => b.favorite-a.favorite || a.name.localeCompare(b.name))} 
-        renderItem={({item}) => <OrgItem item={item} />}
+        data={userOrganizations.sort((a,b) => b['value']['favorite']-a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
+        renderItem={({item}) => <OrganizationItem item={item} />}
       />
     </View>
   )

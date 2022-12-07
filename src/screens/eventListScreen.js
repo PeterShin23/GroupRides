@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, StatusBar, Dimensions,} from 'react-native';
-import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
-import Modal from 'react-native-modal';
+// import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
+// import Modal from 'react-native-modal';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-navigation';

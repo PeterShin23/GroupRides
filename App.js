@@ -16,6 +16,7 @@ import AuthScreen from './src/screens/authScreen';
 import NewEventScreen from './src/screens/newEventScreen';
 import NewOrgScreen from './src/screens/newOrgScreen';
 import RegisterScreen from './src/screens/registerScreen';
+import OrgInfoScreen from './src/screens/orgInfoScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -88,7 +89,7 @@ function Home({navigation}) {
         options={{
           headerRight: () => (
             <View>
-              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Org')}>
+              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Organization')}>
                 <Text style={styles.headerRightText}>New</Text>
               </TouchableOpacity>
             </View>
@@ -129,10 +130,29 @@ export default function App() {
         <Stack.Screen
           name="New Event"
           component={NewEventScreen}
+          options={{
+            headerTitle: "Create Event",
+          }}
         />
         <Stack.Screen
-          name="New Org"
+          name="New Organization"
           component={NewOrgScreen}
+          options={{
+            headerTitle: "Create Organization",
+          }}
+        />
+        <Stack.Screen
+          name="Organization Info"
+          component={OrgInfoScreen}
+          options={{
+            headerRight: () => (
+              <View>
+                <TouchableOpacity style={styles.stackAddButton}>
+                  <Text style={styles.stackHeaderRightText}>New Event</Text>
+                </TouchableOpacity>
+              </View>
+            )
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -157,6 +177,19 @@ const styles = StyleSheet.create({
   },
   headerRightText: {
     fontSize: 15,
+    textAlign: 'center',
+    color: 'white',
+  },
+  stackAddButton: {
+    width: 90,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center', 
+  },
+  stackHeaderRightText: {
+    fontSize: 13,
     textAlign: 'center',
     color: 'white',
   },

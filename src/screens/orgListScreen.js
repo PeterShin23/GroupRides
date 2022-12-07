@@ -8,7 +8,7 @@ import { auth, db, storage } from '../../firebase';
 import { get } from 'react-native-extra-dimensions-android';
 
 
-export default function OrgListScreen() {
+export default function OrgListScreen({ navigation }) {
 
   const testOrgs  = [
     {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
@@ -16,35 +16,6 @@ export default function OrgListScreen() {
   ]
 
   const [orgItems, setOrgItems] = useState(testOrgs)
-
-  // const [orgItems, setOrgItems] = useState([])
-
-  useEffect(() => {
-    // const db = getDatabase()
-    // const user = auth.currentUser
-    
-    // const organizationRef = ref(db, `organization/` + id);
-    // onValue(organizationRef, (snapshot) => {
-    //   const
-    
-    // })
-  })
-  // useEffect(() => {
-  //   if (auth.currentUser) {
-  //     const user = auth.currentUser
-
-  //   }
-  // }, [])
-
-  // const db = getDatabase()
-  // const user = auth.currentUser
-  // set(ref(db, 'organizations/' + user.uid), {
-  //   name: name,
-  //   id: id,
-  //   favorite: false,
-  // })
-
-
 
   const markItemFavorite = itemId => {
     const newItem = orgItems.map(item => {
@@ -55,6 +26,10 @@ export default function OrgListScreen() {
     });
     setOrgItems(newItem);
   };
+
+  const orgInfoPressHandler = (item) => {
+    navigation.navigate('Organization Info', {item})
+  }
 
   const OrgItem = ({item}) => {
     return (
@@ -102,7 +77,11 @@ export default function OrgListScreen() {
         showsVerticalScrollingIndicator={true}
         contentContainerStyle={{padding:10, paddingBottom:100}}
         data={orgItems.sort((a,b) => b.favorite-a.favorite || a.name.localeCompare(b.name))} 
-        renderItem={({item}) => <OrgItem item={item} />}
+        renderItem={({item}) => 
+          <TouchableOpacity onPress={() => orgInfoPressHandler(item)}>
+            <OrgItem item={item} />
+          </TouchableOpacity>
+        }
       />
     </View>
   )

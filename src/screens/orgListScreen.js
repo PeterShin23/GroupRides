@@ -9,96 +9,66 @@ import { auth, db, storage } from '../../firebase';
 
 export default function OrgListScreen() {
 
-  // list of organizations
-  // const testOrgs  = [
-  //   {id: 'testorg1id', name: "testOrgName", description: "", favorite: false},
-  //   {id: 'testorg2id', name: "testOrgName2", description: "", favorite: false},
-  // ]
-  // const [orgItems, setOrgItems] = useState(testOrgs)
   const [userOrganizations, setUserOrganizations] = useState([])
-
-
-  function getUserOrganizations() {
-    const user = auth.currentUser
-
-    // get all organizations of user
-    let userOrgs = []
-    const user2orgRef = ref(db, `user2organization/${user.uid}`);
-    onValue(user2orgRef, (snapshot) => {
-      if (snapshot.val() === null) {
-        console.log("user is not part of any organizations")
-      } else {
-        // get information about organization
-        console.log("Inside onValue user2orgRef")
-        for (var orgId in snapshot.val()) {
-
-          // get information from user2organization
-          const favorite = snapshot.val()[orgId]['favorite']
-          const memberType = snapshot.val()[orgId]['memberType']
-
-          const orgRef = ref(db, `organization/${orgId}`)
-          onValue(orgRef, (ss) => {
-            console.log("Inside onValue orgRef WITH ORGID: " + orgId)
-            if (ss.val() === null) {
-              console.log('no such organization found')
-            } else {
-              // get info from organization
-              const orgName = ss.val()['name']
-
-              // put together information
-              const orgInfo = {
-                id: orgId,
-                name: orgName,
-                favorite: favorite,
-                memberType: memberType
-              }
-
-              // push to temp list of orgs
-              userOrgs.push({ label: orgId, value: orgInfo })
-
-            }
-          })
-        }
-      }
-      console.log(userOrgs)
-      setUserOrganizations(userOrgs)
-    })
-  }
+  const [refresh, setRefresh] = useState(false)
+  const user = auth.currentUser
 
   useEffect(() => {
     getUserOrganizations();
-    // markItemFavorite();
-    console.log("USEEFFECT FIRED")
-  }, []);
+  }, [refresh]);
 
-  const markItemFavorite = orgId => {
-    console.log('marking favorite')
-    // const db = getDatabase()
-    // const user = auth.currentUser
+  function getUserOrganizations() {
+    // get all organizations of user
+    const user2orgRef = ref(db, `user2organization/${user.uid}`);
+    onValue(user2orgRef, (snapshot) => {
+      var userOrgs = []
+      if (!snapshot.exists()) {
+        console.log("User is not part of any organizations.")
+      } else {
+        // Get information about each organization the user is a part of
+        snapshot.forEach((snapshot) => {
+          if (snapshot.exists()) {
+            let orgId = snapshot.key
+            const orgRef = ref(db, `organization/${orgId}`)
+            const favorite = snapshot.val()['favorite']
+            const memberType = snapshot.val()['memberType']
 
-    // const markFavoriteOrgRef = ref(db, `user2organization/${user.uid}/${orgId}`);
-    // onValue(markFavoriteOrgRef, (snapshot) => {
-    //   if (snapshot.val() === null) {
-    //     console.log('check ref path')
-    //   } else {
-    //     // update(markFavoriteOrgRef, {
-    //     //   favorite: !snapshot.val()['favorite']
-    //     // })
-    //   }
-    // })
-    // // getUserOrganizations()
+            onValue(orgRef, (orgSnapshot) => {
+              // console.log("Inside onValue orgRef WITH ORGID: " + orgId)
+              if (orgSnapshot.val() === null) {
+                console.log('no such organization found')
+              } else {
+                // get info from organization
+                const orgName = orgSnapshot.val()['name']
+                // put together information
+                const orgInfo = {
+                  id: orgId,
+                  name: orgName,
+                  favorite: favorite,
+                  memberType: memberType
+                }
+  
+                // push to temp list of orgs
+                userOrgs.push({ label: orgId, value: orgInfo })
+                setUserOrganizations(userOrgs)
+              }
+            })
+          }
+        })
+      }
+    })
   }
 
-  // works with test orgs
-  // const markItemFavorite = itemId => {
-  //   const newItem = orgItems.map(item => {
-  //       if (item.id == itemId) {
-  //         return {...item, favorite: !item.favorite};
-  //       }
-  //       return item;
-  //   });
-  //   setOrgItems(newItem);
-  // };
+
+
+  const markItemFavorite = (orgId, isFavorite) => {
+    // console.log('marking favorite')
+    update(ref(db, `user2organization/${user.uid}/${orgId}`), {
+      favorite: !isFavorite
+    }).then(() => {
+      setRefresh(!refresh)
+    })
+  }
 
   const OrganizationItem = ({ item }) => {
     return (
@@ -125,12 +95,12 @@ export default function OrgListScreen() {
         </View>
         <View>
           {item['value']['favorite'] && (
-            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id']) }}>
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id'], item['value']['favorite']) }}>
               <Ionicons name='star' size={25} color={'#ffcd3c'}></Ionicons>
             </TouchableOpacity>
           )}
           {!item['value']['favorite'] && (
-            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id']) }}>
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id'], item['value']['favorite']) }}>
               <Ionicons name='star-outline' size={25} color={'#ffcd3c'}></Ionicons>
             </TouchableOpacity>
           )}

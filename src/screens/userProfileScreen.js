@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { signOut } from 'firebase/auth';
-import { ref as dbref, child, get } from 'firebase/database';
+import { ref as dbref, child, get, update, set } from 'firebase/database';
 import { ref as stref, uploadBytes } from 'firebase/storage';
 import { auth, db, storage } from '../../firebase';
 import { Entypo } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ export default function UserProfileScreen() {
   const [username, setUsername] = useState('')
   const [uid, setUid] = useState('')
   const [profilePic, setProfilePic] = useState(null)
+  const user = auth.currentUser
 
   useEffect(() => {
     if (auth.currentUser) {
@@ -58,8 +59,13 @@ export default function UserProfileScreen() {
 
     const picRef = stref(storage, `images/${imageName}`)
     uploadBytes(picRef, blob).then((snapshot) => {
-        console.log("SUCCESS")
+      console.log("SUCCESS")
+      update(dbref(db, 'users/' + user.uid), {
+        profile_picture: uri
+      })
     })
+
+
   }
 
   return (

@@ -7,7 +7,7 @@ import { getDatabase, ref, onValue, set, update } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 
 
-export default function OrgListScreen() {
+export default function OrgListScreen({ navigation }) {
 
   const [userOrganizations, setUserOrganizations] = useState([])
   const [refresh, setRefresh] = useState(false)
@@ -59,7 +59,9 @@ export default function OrgListScreen() {
     })
   }
 
-
+  const orgInfoPressHandler = (item) => {
+    navigation.navigate('Organization Info', {item})
+  }
 
   const markItemFavorite = (orgId, isFavorite) => {
     // console.log('marking favorite')
@@ -116,7 +118,11 @@ export default function OrgListScreen() {
         showsVerticalScrollingIndicator={true}
         contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
         data={userOrganizations.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
-        renderItem={({ item }) => <OrganizationItem item={item} />}
+        renderItem={({item}) => 
+          <TouchableOpacity onPress={() => orgInfoPressHandler(item)}>
+            <OrgItem item={item} />
+          </TouchableOpacity>
+        }
       />
     </View>
   )

@@ -77,7 +77,7 @@ function Home({navigation}) {
           headerRight: () => (
             <View>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event')}>
-                <Text style={styles.headerRightText}>New</Text>
+                <Text style={styles.headerRightText}>Create</Text>
               </TouchableOpacity>
             </View>
           )
@@ -90,7 +90,7 @@ function Home({navigation}) {
           headerRight: () => (
             <View>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Organization')}>
-                <Text style={styles.headerRightText}>New</Text>
+                <Text style={styles.headerRightText}>Create</Text>
               </TouchableOpacity>
             </View>
           )

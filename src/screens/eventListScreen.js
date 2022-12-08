@@ -109,12 +109,12 @@ export default function EventListScreen() {
         <View>
           {item['value']['favorite'] && (
             <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
-              <Ionicons name='star' size={25} color={'#ffcd3c'}></Ionicons>
+              <Ionicons name='heart' size={25} color={'#ed2939'}></Ionicons>
             </TouchableOpacity>
           )}
           {!item['value']['favorite'] && (
             <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
-              <Ionicons name='star-outline' size={25} color={'#ffcd3c'}></Ionicons>
+              <Ionicons name='heart-outline' size={25} color={'#ed2939'}></Ionicons>
             </TouchableOpacity>
           )}
         </View>

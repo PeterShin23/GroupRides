@@ -37,7 +37,12 @@ const RegisterScreen = () => {
                 console.log("Error Code: " + errorCode + "\nError Message: " + errorMessage)
 
                 // TODO: alert needs to match error message
-                alert("Please make sure your email is in the corrent format and/or that your password is at least 6 characters.")
+                if (errorMessage.includes("email-already-in-use")) {
+                    alert("An account with the entered email already exists. Please log in or use a new email.")
+                }
+                else {
+                    alert("Please make sure your email is in the corrent format and/or that your password is at least 6 characters.")
+                }
             });
     }
 
@@ -61,7 +66,7 @@ const RegisterScreen = () => {
             quality: 1,
         });
 
-        console.log(result);
+        // console.log(result);
         if (!result.canceled) {
             setProfilePic(result.assets[0].uri);
         }

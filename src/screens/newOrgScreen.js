@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, child } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 
 export default function NewOrgScreen({navigation}) {
@@ -11,16 +11,16 @@ export default function NewOrgScreen({navigation}) {
   const [idExistsBool, setIdExistsBool] = useState(false)
 
   function onCreateOrgHandler() {
-    const db = getDatabase()
     const user = auth.currentUser
     
     // check if the organization id is unique
     const organizationRef = ref(db, `organization/` + oId);
-    onValue(organizationRef, (snapshot) => {
-      const organization = snapshot.val()
-      if (organization === null) {
-        console.log('organization does not exist yet')
-
+    get(organizationRef).then((snapshot) => {
+      // If the snapshot exists, it means the org id is NOT unique
+      if (snapshot.exists()) {
+        console.log('id already exists')
+        alert("An organization with the entered ID already exists. Please enter a new ID.")
+      } else {
         // create organization for all users to find
         set(ref(db, 'organization/' + oId), {
           name: oName
@@ -32,19 +32,11 @@ export default function NewOrgScreen({navigation}) {
           favorite: false,
           memberType: "admin"      
         })
-        
+
         navigation.navigate('My Organizations')
       }
-      else {
-        // TODO: Why is this code being reached if it already entered the if statement above?
-        console.log('id already exists')
-
-        // TODO: Works fine when the organization with the id doesn't exist.
-        // For some reason, this alert pops up after an org with a unique id is made.
-        // Need to fix this alert or change the way we display the error.
-        // 'react-native-material-textfield' seems pretty useful for this.
-        // Alert.alert('This ID already exists!')
-      }
+    }).catch((error) => {
+      console.error(error)
     })
   }
 

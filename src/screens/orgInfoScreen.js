@@ -27,7 +27,7 @@ export default function OrgInfoScreen({ route, navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-			headerTitle: `${item.name}`
+			headerTitle: item['value']['name']
 	})
   }, []);
 
@@ -59,10 +59,10 @@ export default function OrgInfoScreen({ route, navigation }) {
 						}]
 					}
 				> 
-					<Text style={styles.orgLetter}>{item?.name.substring(0,1).toUpperCase()}</Text>
+					<Text style={styles.orgLetter}>{item['value']['name'].substring(0,1).toUpperCase()}</Text>
 				</TouchableHighlight>
 			</View>
-			<Text style={styles.idText}>@{item.id}</Text>
+			<Text style={styles.idText}>@{item['value']['id']}</Text>
 			<Text style={styles.headerText}>Upcoming Events</Text>
 			<FlatList
 			showsVerticalScrollingIndicator={true}

@@ -2,17 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref as dbref, child, get } from 'firebase/database';
+import { ref as stref, uploadBytes } from 'firebase/storage';
 import { auth, db, storage } from '../../firebase';
 import { Entypo } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function UserProfileScreen() {
 
   const [username, setUsername] = useState('')
+  const [uid, setUid] = useState('')
   const [profilePic, setProfilePic] = useState(null)
 
   useEffect(() => {
     if (auth.currentUser) {
       const uid = auth.currentUser.uid
+      setUid(uid)
       const ref = dbref(db)
       get(child(ref, `users/${uid}`)).then((snapshot) => {
         setUsername(snapshot.val().username)
@@ -41,10 +45,21 @@ export default function UserProfileScreen() {
       quality: 1,
     });
 
-    console.log(result);
+    // console.log(result);
     if (!result.canceled) {
       setProfilePic(result.assets[0].uri);
+      uploadImage(result.assets[0].uri, uid)
     }
+  }
+
+  const uploadImage = async (uri, imageName) => {
+    const response = await fetch(uri)
+    const blob = await response.blob();
+
+    const picRef = stref(storage, `images/${imageName}`)
+    uploadBytes(picRef, blob).then((snapshot) => {
+        console.log("SUCCESS")
+    })
   }
 
   return (

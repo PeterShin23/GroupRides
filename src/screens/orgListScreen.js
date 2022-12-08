@@ -17,10 +17,10 @@ export default function OrgListScreen() {
   // const [orgItems, setOrgItems] = useState(testOrgs)
   const [userOrganizations, setUserOrganizations] = useState([])
 
+
   function getUserOrganizations() {
-    const db = getDatabase()
     const user = auth.currentUser
-    
+
     // get all organizations of user
     let userOrgs = []
     const user2orgRef = ref(db, `user2organization/${user.uid}`);
@@ -29,6 +29,7 @@ export default function OrgListScreen() {
         console.log("user is not part of any organizations")
       } else {
         // get information about organization
+        console.log("Inside onValue user2orgRef")
         for (var orgId in snapshot.val()) {
 
           // get information from user2organization
@@ -37,6 +38,7 @@ export default function OrgListScreen() {
 
           const orgRef = ref(db, `organization/${orgId}`)
           onValue(orgRef, (ss) => {
+            console.log("Inside onValue orgRef WITH ORGID: " + orgId)
             if (ss.val() === null) {
               console.log('no such organization found')
             } else {
@@ -52,19 +54,21 @@ export default function OrgListScreen() {
               }
 
               // push to temp list of orgs
-              userOrgs.push({label: orgId, value: orgInfo})
+              userOrgs.push({ label: orgId, value: orgInfo })
+
             }
           })
         }
       }
+      console.log(userOrgs)
+      setUserOrganizations(userOrgs)
     })
-    console.log(userOrgs)
-    setUserOrganizations(userOrgs)
   }
 
   useEffect(() => {
     getUserOrganizations();
     // markItemFavorite();
+    console.log("USEEFFECT FIRED")
   }, []);
 
   const markItemFavorite = orgId => {
@@ -96,28 +100,28 @@ export default function OrgListScreen() {
   //   setOrgItems(newItem);
   // };
 
-  const OrganizationItem = ({item}) => {
+  const OrganizationItem = ({ item }) => {
     return (
-    <View style={styles.orgItem}>
-        <View >
+      <View style={styles.orgItem}>
+        <View>
           <TouchableHighlight
-            style = { [styles.orgPic, {
-              backgroundColor:'#bbf1f1',
+            style={[styles.orgPic, {
+              backgroundColor: '#bbf1f1',
               justifyContent: 'center',
               alignItems: 'center',
-              }]
+            }]
             }
-          > 
-            <Text style={styles.orgLetter}>{item['value']['name'].substring(0,1).toUpperCase()}</Text>
+          >
+            <Text style={styles.orgLetter}>{item['value']['name'].substring(0, 1).toUpperCase()}</Text>
           </TouchableHighlight>
         </View>
-        <View style={{flex:1, marginLeft:10}}>
-            <Text style={styles.nameText}>
-                {item['value']['name']}
-            </Text>
-            <Text style={styles.idText}>
-                @{item['value']['id']}
-            </Text>
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={styles.nameText}>
+            {item['value']['name']}
+          </Text>
+          <Text style={styles.idText}>
+            @{item['value']['id']}
+          </Text>
         </View>
         <View>
           {item['value']['favorite'] && (
@@ -132,17 +136,17 @@ export default function OrgListScreen() {
           )}
         </View>
 
-    </View>
-    )    
-  } 
+      </View>
+    )
+  }
 
   return (
     <View style={styles.body}>
       <FlatList
         showsVerticalScrollingIndicator={true}
-        contentContainerStyle={{padding:10, paddingBottom:100}}
-        data={userOrganizations.sort((a,b) => b['value']['favorite']-a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
-        renderItem={({item}) => <OrganizationItem item={item} />}
+        contentContainerStyle={{ padding: 10, paddingBottom: 100 }}
+        data={userOrganizations.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
+        renderItem={({ item }) => <OrganizationItem item={item} />}
       />
     </View>
   )
@@ -184,7 +188,7 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     top: '25%',
-    alignItems: 'center', 
+    alignItems: 'center',
     marginRight: 20,
     borderRadius: 3,
   }

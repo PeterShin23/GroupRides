@@ -26,6 +26,8 @@ export default function EventListScreen() {
   //   });
   // }, []);
 
+  
+
   const EventItem = ({item}) => {
     return (
     <View style={styles.eventItem}>

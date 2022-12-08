@@ -1,27 +1,20 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
 // import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
-import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { ref, onValue, set, get, child } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Dropdown } from 'react-native-element-dropdown';
 
 import uid from '../../utils/uid';
 
-export default function NewEventScreen({navigation}) {
+export default function NewEventScreen({ navigation }) {
 
   const [name, setName] = useState('')
   const [destination, setDestination] = useState('')
 
-  const [events, setEvents] = useState({})
-
   useEffect(() => {
     getUserOrganizations();
-    return onValue(ref(db, '/events'), querySnapShot => {
-      let data = querySnapShot.val() || {};
-      let events = {...data};
-      setEvents(events)
-    });
   }, []);
 
   // dropdown
@@ -29,30 +22,29 @@ export default function NewEventScreen({navigation}) {
   const [userOrganizations, setUserOrganizations] = useState([])
 
   function getUserOrganizations() {
-    const db = getDatabase()
     const user = auth.currentUser
-    
+
     // get all organizations of user
     let userOrgs = []
     const user2orgRef = ref(db, `user2organization/${user.uid}`);
-    onValue(user2orgRef, (snapshot) => {
-      if (snapshot.val() === null) {
-        console.log("user is not part of any organizations")
-      } else {
+    get(user2orgRef).then((snapshot) => {
+      if (!snapshot.exists()) {
+        console.log("User is not part of any organizations.")
+      }
+      else {
         for (var orgId in snapshot.val()) {
           // console.log(orgId)                        // get the key
           // console.log(snapshot.val()[orgId])        // get the value of key
-          userOrgs.push({label: `@${orgId}`, value: `@${orgId}`}) // This way because of item schema: https://www.npmjs.com/package/react-native-element-dropdown
+          userOrgs.push({ label: `@${orgId}`, value: `@${orgId}` }) // This way because of item schema: https://www.npmjs.com/package/react-native-element-dropdown
         }
       }
     })
-    // console.log('start')
-    console.log(userOrgs)
+    // console.log(userOrgs)
     setUserOrganizations(userOrgs)
   }
 
   // date
-  const [dateText, setDateText] = useState('Select Event Date') 
+  const [dateText, setDateText] = useState('Select Event Date')
   const [date, setDate] = useState(new Date())
   const [dateOpen, setDateOpen] = useState(false)
 
@@ -63,12 +55,12 @@ export default function NewEventScreen({navigation}) {
 
     let tempDate = new Date(currentDate)
     console.log(tempDate)
-    let formattedDate = tempDate.getMonth()+1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
+    let formattedDate = tempDate.getMonth() + 1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
     setDateText(formattedDate)
   }
 
   // time
-  const [timeText, setTimeText] = useState('Select Event Time') 
+  const [timeText, setTimeText] = useState('Select Event Time')
   const [time, setTime] = useState(new Date())
   const [timeOpen, setTimeOpen] = useState(false)
 
@@ -90,90 +82,93 @@ export default function NewEventScreen({navigation}) {
       tempMinutes = '0' + tempMinutes.toString()
     }
     let formattedTime = tempHours + ":" + tempMinutes + amPm
-    setTimeText(formattedTime) 
+    setTimeText(formattedTime)
   }
 
   function onCreateEventHandler() {
     console.log("create event")
-    
-    const db = getDatabase()
     const user = auth.currentUser
     // let's add event to org
     const orgId = selectedOrganization.substring(1)  // removing '@'
     const eventId = uid()
     const orgEventRef = ref(db, `organizationEvents/${orgId}/${eventId}`);
-    onValue(orgEventRef, (snapshot) => {
-      if (snapshot.val() === null) {
+    
+    get(orgEventRef).then((snapshot) => {
+      // If the snapshot exists, it means the eventId exists already
+      if (snapshot.exists()) {
+        console.error("Event with ID: " + eventId + " already exists!")
+        alert("Event with ID: " + eventId + " already exists! Please try again.")
+      }
+      else {
         // add event to selected organization
-        set(ref(db, `organizationEvents/${orgId}/${eventId}`), {
+        set(orgEventRef, {
           name: name,
           destinationName: destination,
           date: date.toLocaleDateString(),
           time: time.toLocaleTimeString()
         })
+
         // make user the host (admin) of event
         const user2eventRef = ref(db, `user2event/${user.uid}/${eventId}`)
         set(user2eventRef, {
           type: 'admin',
           favorite: false
         })
-          
+
         navigation.navigate('My Events')
-      } else {
-        console.log("this ref already exists????")
       }
     })
   }
 
   return (
     <View style={styles.body}>
-    <Dropdown 
-      style={styles.dropdown}
-      placeholderStyle={styles.placeholderStyle}
-      selectedTextStyle={styles.selectedTextStyle}
-      maxHeight={300}
-      placeholder="Select an organization"
-      data={userOrganizations}
-      labelField="label"
-      valueField="value"
-      value={selectedOrganization}
-      onChange={item => {
-        setSelectedOrganization(item.value);
-      }}
+      <Dropdown
+        style={styles.dropdown}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        maxHeight={300}
+        placeholder="Select an organization"
+        data={userOrganizations}
+        labelField="label"
+        valueField="value"
+        value={selectedOrganization}
+        onChange={item => {
+          setSelectedOrganization(item.value);
+        }}
 
-    />
-      <TextInput 
-          style={styles.input} 
-          placeholder="Event Name"
-          value={name}
-          onChangeText={(value) => setName(value)}    
       />
-      <TextInput 
-          style={styles.input} 
-          placeholder="Event Destination"
-          value={destination}
-          onChangeText={(value) => setDestination(value)}    
+      <TextInput
+        style={styles.input}
+        placeholder="Event Name"
+        value={name}
+        onChangeText={(value) => setName(value)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Event Destination"
+        value={destination}
+        onChangeText={(value) => setDestination(value)}
       />
       <Pressable onPress={() => setDateOpen(true)}>
-          <Text style={styles.text}>{dateText}</Text>
+        <Text style={styles.text}>{dateText}</Text>
       </Pressable>
-      {dateOpen && 
-        <RNDateTimePicker 
-        mode="date"
-        display="default"
-        value={new Date()}
-        onChange={onDateChange}
+      {dateOpen &&
+        <RNDateTimePicker
+          mode="date"
+          display="default"
+          value={new Date()}
+          onChange={onDateChange}
         />
       }
       <Pressable onPress={() => setTimeOpen(true)}>
-          <Text style={styles.text}>{timeText}</Text>
+        <Text style={styles.text}>{timeText}</Text>
       </Pressable>
-      {timeOpen && 
-        <RNDateTimePicker 
-        mode="time"
-        display="default"
-        value={new Date()}
-        onChange={onTimeChange}
+      {timeOpen &&
+        <RNDateTimePicker
+          mode="time"
+          display="default"
+          value={new Date()}
+          onChange={onTimeChange}
         />
       }
       <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
@@ -217,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
     position: 'absolute',
     bottom: 40,
     elevation: 2,

@@ -100,6 +100,7 @@ function Home({navigation}) {
 }
 
 export default function App() {
+  
   return (
     <NavigationContainer>
       <Stack.Navigator>

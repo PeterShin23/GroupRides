@@ -120,7 +120,7 @@ export default function OrgListScreen({ navigation }) {
         data={userOrganizations.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
         renderItem={({item}) => 
           <TouchableOpacity onPress={() => orgInfoPressHandler(item)}>
-            <OrgItem item={item} />
+            <OrganizationItem item={item} />
           </TouchableOpacity>
         }
       />

@@ -35,7 +35,8 @@
     "react-native-paper": "^5.0.0",
     "react-native-reanimated": "~2.12.0",
     "react-native-vector-icons": "^9.2.0",
-    "react-navigation": "^4.4.4"
+    "react-navigation": "^4.4.4",
+    "expo-sensors": "~12.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

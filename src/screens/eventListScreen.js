@@ -21,7 +21,7 @@ export default function EventListScreen({ navigation }) {
       var tempEvents = []
       // Means user is not in any orgs therefore no events.
       if (!snapshot.exists()) {
-        console.log("User is not part of any organizations. No events.")
+        console.log("User has no events.")
       } else {
         // Now accumulate all events from organizations the user is a part of.
         // For each organization, add eventItems to temp array

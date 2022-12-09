@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight, Platform, ToastAndroid, Alert } from 'react-native';
 // import { darkTheme } from '../../utils/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -56,6 +56,7 @@ export default function OrgListScreen({ navigation }) {
           }
         })
       }
+      // console.log(userOrgs)
     })
   }
 
@@ -68,6 +69,20 @@ export default function OrgListScreen({ navigation }) {
     update(ref(db, `user2organization/${user.uid}/${orgId}`), {
       favorite: !isFavorite
     }).then(() => {
+      
+      let favoriteMessage = ""
+      if (!isFavorite) {
+        favoriteMessage = "Added to Favorites!"
+      }
+      else {
+        favoriteMessage = "Removed from Favorites"
+      }
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(favoriteMessage, ToastAndroid.SHORT)
+      } else {
+        Alert.alert(favoriteMessage)
+      }
+
       setRefresh(!refresh)
     })
   }
@@ -98,12 +113,12 @@ export default function OrgListScreen({ navigation }) {
         <View>
           {item['value']['favorite'] && (
             <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id'], item['value']['favorite']) }}>
-              <Ionicons name='star' size={25} color={'#ffcd3c'}></Ionicons>
+              <Ionicons name='heart' size={25} color={'#ed2939'}></Ionicons>
             </TouchableOpacity>
           )}
           {!item['value']['favorite'] && (
             <TouchableOpacity style={styles.favoriteButton} onPress={() => { markItemFavorite(item['value']['id'], item['value']['favorite']) }}>
-              <Ionicons name='star-outline' size={25} color={'#ffcd3c'}></Ionicons>
+              <Ionicons name='heart-outline' size={25} color={'#ed2939'}></Ionicons>
             </TouchableOpacity>
           )}
         </View>

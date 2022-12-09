@@ -104,6 +104,7 @@ export default function NewEventScreen({ navigation }) {
       else {
         // add event to selected organization
         set(orgEventRef, {
+          id: eventId,
           name: name,
           destinationName: destination,
           date: date.toLocaleDateString(),

@@ -17,6 +17,7 @@ import NewEventScreen from './src/screens/newEventScreen';
 import NewOrgScreen from './src/screens/newOrgScreen';
 import RegisterScreen from './src/screens/registerScreen';
 import OrgInfoScreen from './src/screens/orgInfoScreen';
+import EventInfoScreen from './src/screens/eventInfoScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -77,7 +78,7 @@ function Home({navigation}) {
           headerRight: () => (
             <View>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event')}>
-                <Text style={styles.headerRightText}>New</Text>
+                <Text style={styles.headerRightText}>Create</Text>
               </TouchableOpacity>
             </View>
           )
@@ -90,7 +91,7 @@ function Home({navigation}) {
           headerRight: () => (
             <View>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Organization')}>
-                <Text style={styles.headerRightText}>New</Text>
+                <Text style={styles.headerRightText}>Create</Text>
               </TouchableOpacity>
             </View>
           )
@@ -133,6 +134,19 @@ export default function App() {
           component={NewEventScreen}
           options={{
             headerTitle: "Create Event",
+          }}
+        />
+        <Stack.Screen
+          name="Event Info"
+          component={EventInfoScreen}
+          options={{
+            headerRight: () => (
+              <View>
+                <TouchableOpacity style={styles.stackAddButton}>
+                  <Text style={styles.stackHeaderRightText}>Be a Driver</Text>
+                </TouchableOpacity>
+              </View>
+            )
           }}
         />
         <Stack.Screen

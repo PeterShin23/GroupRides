@@ -5,7 +5,7 @@ import { auth, db, storage } from '../../firebase';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
-export default function EventListScreen() {
+export default function EventListScreen({ navigation }) {
 
   const [eventItems, setEventItems] = useState([])
   const [refresh, setRefresh] = useState(false)
@@ -71,6 +71,10 @@ export default function EventListScreen() {
     })
   }
 
+  const eventInfoPressHandler = (item) => {
+    navigation.navigate('Event Info', {item})
+  }
+
   const markFavoriteEvent = (eventId, isFavorite) => {
     // console.log("mark event favorite")
     update(ref(db, `user2event/${user.uid}/${eventId}`), {
@@ -109,12 +113,12 @@ export default function EventListScreen() {
         <View>
           {item['value']['favorite'] && (
             <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
-              <Ionicons name='star' size={25} color={'#ffcd3c'}></Ionicons>
+              <Ionicons name='heart' size={25} color={'#ed2939'}></Ionicons>
             </TouchableOpacity>
           )}
           {!item['value']['favorite'] && (
             <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
-              <Ionicons name='star-outline' size={25} color={'#ffcd3c'}></Ionicons>
+              <Ionicons name='heart-outline' size={25} color={'#ed2939'}></Ionicons>
             </TouchableOpacity>
           )}
         </View>
@@ -128,7 +132,10 @@ export default function EventListScreen() {
         showsVerticalScrollingIndicator={true}
         contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
         data={eventItems.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
-        renderItem={({ item }) => <EventItem item={item} />}
+        renderItem={({ item }) => 
+          <TouchableOpacity onPress={() => eventInfoPressHandler(item)}>
+            <EventItem item={item} />
+          </TouchableOpacity>}
       />
     </View>
   )

@@ -1,12 +1,10 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
-// import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import { ref, onValue, set, get, child } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Accelerometer } from 'expo-sensors';
-
 import uid from '../../utils/uid';
 
 export default function NewEventScreen({ navigation }) {
@@ -48,15 +46,13 @@ export default function NewEventScreen({ navigation }) {
   // date
   const [dateText, setDateText] = useState('Select Event Date')
   const [date, setDate] = useState(new Date())
-  const [dateOpen, setDateOpen] = useState(false)
 
   const onDateChange = (event, selectedDate) => {
-    console.log("selectedDATE:"+selectedDate)
+    console.log("selectedDATE:" + selectedDate)
     const currentDate = selectedDate || date;
-    setDateOpen(Platform.OS === 'ios');
     setDate(currentDate)
     let tempDate = new Date(currentDate)
-    console.log("TEMPDATE"+tempDate)
+    console.log("TEMPDATE" + tempDate)
     let formattedDate = tempDate.getMonth() + 1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
     setDateText(formattedDate)
   }
@@ -64,11 +60,9 @@ export default function NewEventScreen({ navigation }) {
   // time
   const [timeText, setTimeText] = useState('Select Event Time')
   const [time, setTime] = useState(new Date())
-  const [timeOpen, setTimeOpen] = useState(false)
 
   const onTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || time;
-    setTimeOpen(Platform.OS === 'ios');
     setTime(currentTime)
 
     let tempTime = new Date(currentTime)
@@ -88,7 +82,13 @@ export default function NewEventScreen({ navigation }) {
   }
 
   function onCreateEventHandler() {
-    console.log("create event")
+    // console.log("create event")
+
+    if (!selectedOrganization || name.trim().length === 0 || destination.trim().length === 0) {
+      alert("Please complete all fields before submitting.")
+      return
+    }
+
     const user = auth.currentUser
     // let's add event to org
     const orgId = selectedOrganization.substring(1)  // removing '@'
@@ -151,13 +151,39 @@ export default function NewEventScreen({ navigation }) {
 
   // usage :
   configureShake(acceleration => {
+    setShake(true)
     setName("")
-    setDate(Date.now())
+    setDate(new Date())
+    setDateText(new Date().toLocaleDateString())
+    const currentTime = new Date();
+    setTime(currentTime)
+
+    let tempTime = new Date(currentTime)
+    // console.log(tempTime)
+    let tempHours = tempTime.getHours()
+    let amPm = "AM"
+    if (tempHours > 12) {
+      tempHours = tempHours - 12
+      amPm = "PM"
+    }
+    let tempMinutes = tempTime.getMinutes()
+    if (tempMinutes < 10) {
+      tempMinutes = '0' + tempMinutes.toString()
+    }
+    let formattedTime = tempHours + ":" + tempMinutes + amPm
+    setTimeText(formattedTime)
+    setDestination('')
+    setSelectedOrganization(null)
+
     Accelerometer.removeAllListeners()
   });
 
   return (
     <View style={styles.body}>
+      {
+        shake &&
+        <Text>Tip: Shake your device to clear inputs!</Text>
+      }
       <Dropdown
         style={styles.dropdown}
         placeholderStyle={styles.placeholderStyle}
@@ -173,41 +199,36 @@ export default function NewEventScreen({ navigation }) {
         }}
 
       />
+      <Text style={styles.inputLabels}>Event Name</Text>
       <TextInput
         style={styles.input}
         placeholder="Event Name"
         value={name}
         onChangeText={(value) => setName(value)}
       />
+      <Text style={styles.inputLabels}>Event Destination</Text>
       <TextInput
         style={styles.input}
         placeholder="Event Destination"
         value={destination}
         onChangeText={(value) => setDestination(value)}
       />
-      <Pressable onPress={() => setDateOpen(true)}>
-        <Text style={styles.text}>{dateText}</Text>
-      </Pressable>
-      {/* TODO: fix the text that displays after picking diff date */}
-      {dateOpen &&
-        <RNDateTimePicker
-          mode="date"
-          display="default"
-          value={date}
-          onChange={onDateChange}
-        />
-      }
-      <Pressable onPress={() => setTimeOpen(true)}>
-        <Text style={styles.text}>{timeText}</Text>
-      </Pressable>
-      {timeOpen &&
-        <RNDateTimePicker
-          mode="time"
-          display="default"
-          value={date}
-          onChange={onTimeChange}
-        />
-      }
+      <Text style={styles.dateTimeText}>Select Event Date</Text>
+      <RNDateTimePicker
+        mode="date"
+        display="default"
+        value={date}
+        onChange={onDateChange}
+        style={styles.dateTimePicker}
+      />
+      <Text style={styles.dateTimeText}>Select Event Time</Text>
+      <RNDateTimePicker
+        mode="time"
+        display="default"
+        value={time}
+        onChange={onTimeChange}
+        style={styles.dateTimePicker}
+      />
       <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
@@ -225,23 +246,26 @@ const styles = StyleSheet.create({
     width: '80%',
     margin: 16,
     height: 50,
-    borderBottomColor: 'gray',
-    borderBottomWidth: 0.5,
+    borderColor: '#49b3b3',
+    borderWidth: 2,
+    borderRadius: 16,
+    paddingLeft: 3
   },
-  placeholderStyle: {
-    fontSize: 16,
-  },
-  selectedTextStyle: {
-    fontSize: 16,
+  inputLabels: {
+    fontSize: 14,
+    alignSelf: 'flex-start',
+    marginLeft: 32,
+    marginBottom: 2
   },
   input: {
-    width: '100%',
-    borderRadius: 10,
-    backgroundColor: '#fff',
+    width: '85%',
+    borderRadius: 12,
+    borderColor: '#0783FF',
     textAlign: 'left',
-    fontSize: 20,
-    margin: 20,
-    paddingHorizontal: 10,
+    fontSize: 16,
+    marginBottom: 20,
+    padding: 10,
+    borderWidth: 2
   },
   button: {
     width: 90,
@@ -257,5 +281,11 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#eef5db',
     fontSize: 16,
+  },
+  dateTimeText: {
+    fontSize: 16,
+  },
+  dateTimePicker: {
+    marginBottom: 10,
   },
 })

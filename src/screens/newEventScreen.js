@@ -5,6 +5,7 @@ import { ref, onValue, set, get, child } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Dropdown } from 'react-native-element-dropdown';
+import { Accelerometer } from 'expo-sensors';
 
 import uid from '../../utils/uid';
 
@@ -12,6 +13,7 @@ export default function NewEventScreen({ navigation }) {
 
   const [name, setName] = useState('')
   const [destination, setDestination] = useState('')
+  const [shake, setShake] = useState(false)
 
   useEffect(() => {
     getUserOrganizations();
@@ -49,12 +51,12 @@ export default function NewEventScreen({ navigation }) {
   const [dateOpen, setDateOpen] = useState(false)
 
   const onDateChange = (event, selectedDate) => {
+    console.log("selectedDATE:"+selectedDate)
     const currentDate = selectedDate || date;
     setDateOpen(Platform.OS === 'ios');
     setDate(currentDate)
-
     let tempDate = new Date(currentDate)
-    console.log(tempDate)
+    console.log("TEMPDATE"+tempDate)
     let formattedDate = tempDate.getMonth() + 1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
     setDateText(formattedDate)
   }
@@ -92,7 +94,7 @@ export default function NewEventScreen({ navigation }) {
     const orgId = selectedOrganization.substring(1)  // removing '@'
     const eventId = uid()
     const orgEventRef = ref(db, `organizationEvents/${orgId}/${eventId}`);
-    
+
     get(orgEventRef).then((snapshot) => {
       // If the snapshot exists, it means the eventId exists already
       if (snapshot.exists()) {
@@ -119,6 +121,39 @@ export default function NewEventScreen({ navigation }) {
       }
     })
   }
+
+  // Source: https://stackoverflow.com/questions/56877709/how-do-i-detect-a-shake-event-i-looked-into-react-native-shake-but-i-noticed-it
+  const configureShake = onShake => {
+    // update value every 100ms.
+    // Adjust this interval to detect
+    // faster (20ms) or slower shakes (500ms)
+    Accelerometer.setUpdateInterval(40);
+
+    // at each update, we have acceleration registered on 3 axis
+    // 1 = no device movement, only acceleration caused by gravity
+    const onUpdate = ({ x, y, z }) => {
+
+      // compute a total acceleration value, here with a square sum
+      // you can eventually change the formula
+      // if you want to prioritize an axis
+      const acceleration = Math.sqrt(x * x + y * y + z * z);
+
+      // Adjust sensibility, because it can depend of usage (& devices)
+      const sensibility = 7;
+      if (acceleration >= sensibility) {
+        onShake(acceleration);
+      }
+    };
+
+    Accelerometer.addListener(onUpdate);
+  };
+
+  // usage :
+  configureShake(acceleration => {
+    setName("")
+    setDate(Date.now())
+    Accelerometer.removeAllListeners()
+  });
 
   return (
     <View style={styles.body}>
@@ -152,11 +187,12 @@ export default function NewEventScreen({ navigation }) {
       <Pressable onPress={() => setDateOpen(true)}>
         <Text style={styles.text}>{dateText}</Text>
       </Pressable>
+      {/* TODO: fix the text that displays after picking diff date */}
       {dateOpen &&
         <RNDateTimePicker
           mode="date"
           display="default"
-          value={new Date()}
+          value={date}
           onChange={onDateChange}
         />
       }
@@ -167,7 +203,7 @@ export default function NewEventScreen({ navigation }) {
         <RNDateTimePicker
           mode="time"
           display="default"
-          value={new Date()}
+          value={date}
           onChange={onTimeChange}
         />
       }

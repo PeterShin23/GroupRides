@@ -72,7 +72,7 @@ export default function EventListScreen({ navigation }) {
   }
 
   const eventInfoPressHandler = (item) => {
-    navigation.navigate('Event Info', {item})
+    navigation.navigate('Event Information', {item})
   }
 
   const markFavoriteEvent = (eventId, isFavorite) => {

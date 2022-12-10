@@ -25,6 +25,10 @@ export default function EventInfoScreen({ route, navigation }) {
   }, []);
 
   function getOrgName() {
+    // TODO: Add if there's something good to add for event info name
+    // navigation.setOptions({
+    //     headerTitle: `Event Information`
+    // })
     const orgRef = ref(db, `organization/${item['value']['orgId']}`)
     onValue(orgRef, (orgSS) => {
         if (!orgSS.exists()) {

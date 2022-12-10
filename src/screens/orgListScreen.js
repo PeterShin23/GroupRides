@@ -61,7 +61,7 @@ export default function OrgListScreen({ navigation }) {
   }
 
   const orgInfoPressHandler = (item) => {
-    navigation.navigate('Organization Info', {item})
+    navigation.navigate('Organization Information', {item})
   }
 
   const markItemFavorite = (orgId, isFavorite) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity, TouchableHighlight, Platform, ToastAndroid, Alert } from 'react-native';
+import { StyleSheet, Text, KeyboardAvoidingView, View, TextInput, FlatList, TouchableOpacity, TouchableHighlight, Platform, ToastAndroid, Alert } from 'react-native';
 // import { darkTheme } from '../../utils/colors';
 import Slider from '@react-native-community/slider';
 
@@ -28,7 +28,7 @@ export default function NewDriverScreen({ route, navigation }) {
 		console.log(eventData)
     getUserCarInformation();
 		getEventTime();
-		console.log(pickupTimePlaceholder)
+		// console.log(pickupTimePlaceholder)
   }, []);
 
   function getUserCarInformation() {
@@ -67,8 +67,14 @@ export default function NewDriverScreen({ route, navigation }) {
 		})
 	}
 
+	function saveDriverInfo() {
+		// if user is driver, they can't be rider
+		// if they are rider, they can't be driver
+		console.log('save driver info')
+	}
+
   return (
-    <View style={styles.body}>
+    <KeyboardAvoidingView style={styles.body} behavior="padding">
 			<Text style={{fontSize: 16, fontWeight: '500', marginBottom: 10}}>Vehicle Description</Text>
       <View style={{flexDirection: 'row', marginLeft: 32}}>
 				<View style={{flex: 1}}>
@@ -140,7 +146,7 @@ export default function NewDriverScreen({ route, navigation }) {
       <TouchableOpacity style={styles.button} onPress={() => saveDriverInfo()}>
         <Text style={styles.buttonText}>Let's Drive</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 const styles = StyleSheet.create({

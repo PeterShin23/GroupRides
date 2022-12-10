@@ -137,7 +137,7 @@ export default function App() {
           }}
         />
         <Stack.Screen
-          name="Event Info"
+          name="Event Information"
           component={EventInfoScreen}
           options={{
             headerRight: () => (
@@ -157,7 +157,7 @@ export default function App() {
           }}
         />
         <Stack.Screen
-          name="Organization Info"
+          name="Organization Information"
           component={OrgInfoScreen}
           options={{
             headerRight: () => (

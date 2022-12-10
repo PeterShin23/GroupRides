@@ -18,6 +18,8 @@ import NewOrgScreen from './src/screens/newOrgScreen';
 import RegisterScreen from './src/screens/registerScreen';
 import OrgInfoScreen from './src/screens/orgInfoScreen';
 import EventInfoScreen from './src/screens/eventInfoScreen';
+import CarInfoScreen from './src/screens/carInfoScreen';
+import NewDriverScreen from './src/screens/newDriverScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -139,15 +141,15 @@ export default function App() {
         <Stack.Screen
           name="Event Information"
           component={EventInfoScreen}
-          options={{
-            headerRight: () => (
-              <View>
-                <TouchableOpacity style={styles.stackAddButton}>
-                  <Text style={styles.stackHeaderRightText}>Be a Driver</Text>
-                </TouchableOpacity>
-              </View>
-            )
-          }}
+          // options={{
+          //   headerRight: () => (
+          //     <View>
+          //       <TouchableOpacity style={styles.stackAddButton}>
+          //         <Text style={styles.stackHeaderRightText}>Be a Driver</Text>
+          //       </TouchableOpacity>
+          //     </View>
+          //   )
+          // }}
         />
         <Stack.Screen
           name="New Organization"
@@ -167,6 +169,17 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             )
+          }}
+        />
+        <Stack.Screen
+          name="Car Information"
+          component={CarInfoScreen}
+        />
+        <Stack.Screen
+          name="Be a Driver"
+          component={NewDriverScreen}
+          options={{
+            headerTitle: "Be a Driver",
           }}
         />
       </Stack.Navigator>

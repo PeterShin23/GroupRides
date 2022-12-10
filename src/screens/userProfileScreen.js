@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Image, Modal } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TouchableHighlight, View, Image, Modal } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref as dbref, child, get, update, set } from 'firebase/database';
 import { ref as stref, uploadBytes } from 'firebase/storage';
@@ -7,7 +7,7 @@ import { auth, db, storage } from '../../firebase';
 import { Entypo } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
-export default function UserProfileScreen() {
+export default function UserProfileScreen({ navigation }) {
 
   const [username, setUsername] = useState('')
   const [uid, setUid] = useState('')
@@ -138,6 +138,13 @@ export default function UserProfileScreen() {
         </View>
       </View>
       <Text>Good to see you, {username}!</Text>
+      <View style={styles.verticalLine}></View>
+      <TouchableOpacity style={{alignSelf: 'flex-start', marginVertical: 8, marginLeft: 15, width: '100%'}} onPress={() => navigation.navigate("Car Information")}>
+        <View>
+          <Text style={{fontSize: 16}}>Add/Edit Car Information</Text>
+        </View>
+      </TouchableOpacity>
+      <View style={styles.verticalLine}></View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.signOutButton}
@@ -250,5 +257,11 @@ choiceButtons: {
     borderRadius: 20,
     marginBottom: 10,
     backgroundColor: '#0783FF'
+},
+verticalLine: {
+  width: '100%',
+  height: 1,
+  backgroundColor: '#000',
+  marginVertical: 5,
 },
 });

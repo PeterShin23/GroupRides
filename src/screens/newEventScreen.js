@@ -15,6 +15,7 @@ export default function NewEventScreen({ navigation }) {
 
   useEffect(() => {
     getUserOrganizations();
+    setBeginningDateTimeText();
   }, []);
 
   // dropdown
@@ -44,25 +45,31 @@ export default function NewEventScreen({ navigation }) {
   }
 
   // date
-  const [dateText, setDateText] = useState('Select Event Date')
+  // const [dateText, setDateText] = useState('Select Event Date')
+  const [dateText, setDateText] = useState('')
+
+  const [dateOpen, setDateOpen] = useState(false)
   const [date, setDate] = useState(new Date())
 
   const onDateChange = (event, selectedDate) => {
-    console.log("selectedDATE:" + selectedDate)
+    // console.log("selectedDATE:" + selectedDate)
     const currentDate = selectedDate || date;
+    setDateOpen(false)
     setDate(currentDate)
     let tempDate = new Date(currentDate)
-    console.log("TEMPDATE" + tempDate)
+    // console.log("TEMPDATE" + tempDate)
     let formattedDate = tempDate.getMonth() + 1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
     setDateText(formattedDate)
   }
 
   // time
   const [timeText, setTimeText] = useState('Select Event Time')
+  const [timeOpen, setTimeOpen] = useState(false)
   const [time, setTime] = useState(new Date())
 
   const onTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || time;
+    setTimeOpen(false)
     setTime(currentTime)
 
     let tempTime = new Date(currentTime)
@@ -79,6 +86,89 @@ export default function NewEventScreen({ navigation }) {
     }
     let formattedTime = tempHours + ":" + tempMinutes + amPm
     setTimeText(formattedTime)
+  }
+
+  const setBeginningDateTimeText = () => {
+    const currentDateTime = new Date()
+    setTime(currentDateTime)
+    setDate(currentDateTime)
+
+    let tempDate = new Date(currentDateTime)
+    let formattedDate = tempDate.getMonth() + 1 + "/" + tempDate.getDate() + "/" + tempDate.getFullYear()
+    setDateText(formattedDate)
+
+    let tempTime = new Date(currentDateTime)
+    let tempHours = tempTime.getHours()
+    let amPm = "AM"
+    if (tempHours > 12) {
+      tempHours = tempHours - 12
+      amPm = "PM"
+    }
+    let tempMinutes = tempTime.getMinutes()
+    if (tempMinutes < 10) {
+      tempMinutes = '0' + tempMinutes.toString()
+    }
+    let formattedTime = tempHours + ":" + tempMinutes + amPm
+    setTimeText(formattedTime)
+  }
+
+  const AndroidDateTime = () => {
+    return (
+      <View>
+        {/* <Pressable onPress={() => setDateOpen(true)}>
+            <Text style={styles.text}>{dateText}</Text>
+        </Pressable> */}
+        <Text style={styles.dateTimeText}>Select Event Date</Text>
+        <TouchableOpacity style={styles.dateTimeButton} onPress={() => setDateOpen(true)}>
+          <Text style={{fontSize: 16, color: '#000'}}>{dateText}</Text>
+        </TouchableOpacity>
+        {dateOpen && 
+          <RNDateTimePicker 
+          mode="date"
+          display="default"
+          value={date}
+          onChange={onDateChange}
+          style={styles.dateTimePicker}
+          />
+        }
+        <Text style={styles.dateTimeText}>Select Event Time</Text>
+        <TouchableOpacity style={styles.dateTimeButton} onPress={() => setTimeOpen(true)}>
+          <Text style={{fontSize: 16, color: '#000'}}>{timeText}</Text>
+        </TouchableOpacity>
+        {timeOpen && 
+          <RNDateTimePicker 
+          mode="time"
+          display="default"
+          value={time}
+          onChange={onTimeChange}
+          style={styles.dateTimePicker}
+          />
+        }
+      </View>
+    )
+  }
+
+  const iOSDateTime = () => {
+    return (
+      <View>
+        <Text style={styles.dateTimeText}>Select Event Date</Text>
+        <RNDateTimePicker
+          mode="date"
+          display="default"
+          value={date}
+          onChange={onDateChange}
+          style={styles.dateTimePicker}
+        />
+        <Text style={styles.dateTimeText}>Select Event Time</Text>
+        <RNDateTimePicker
+          mode="time"
+          display="default"
+          value={time}
+          onChange={onTimeChange}
+          style={styles.dateTimePicker}
+        />
+      </View>
+    )
   }
 
   function onCreateEventHandler() {
@@ -213,22 +303,8 @@ export default function NewEventScreen({ navigation }) {
         value={destination}
         onChangeText={(value) => setDestination(value)}
       />
-      <Text style={styles.dateTimeText}>Select Event Date</Text>
-      <RNDateTimePicker
-        mode="date"
-        display="default"
-        value={date}
-        onChange={onDateChange}
-        style={styles.dateTimePicker}
-      />
-      <Text style={styles.dateTimeText}>Select Event Time</Text>
-      <RNDateTimePicker
-        mode="time"
-        display="default"
-        value={time}
-        onChange={onTimeChange}
-        style={styles.dateTimePicker}
-      />
+      {Platform.OS === 'android' && <AndroidDateTime />}
+      {Platform.OS === 'ios' && <iOSDateTime />}
       <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
@@ -243,12 +319,12 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   dropdown: {
-    width: '80%',
+    width: '85%',
     margin: 16,
     height: 50,
-    borderColor: '#49b3b3',
+    borderColor: '#0783FF',
     borderWidth: 2,
-    borderRadius: 16,
+    borderRadius: 12,
     paddingLeft: 3
   },
   inputLabels: {
@@ -279,11 +355,24 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonText: {
-    color: '#eef5db',
+    color: '#fff',
     fontSize: 16,
+  },
+  dateTimeButton: {
+    alignSelf: 'center', // fit text
+    padding: 8,
+    // height: 40,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderColor: '#0783FF',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   dateTimeText: {
     fontSize: 16,
+    marginBottom: 10,
   },
   dateTimePicker: {
     marginBottom: 10,

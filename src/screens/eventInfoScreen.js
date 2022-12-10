@@ -15,15 +15,26 @@ export default function EventInfoScreen({ route, navigation }) {
 
   const { item } = route.params // organization information
 
-  const [orgName, setOrgName] = useState("")
+  const [rides, setRides] = useState([])
 
   useEffect(() => {
     // console.log("------------------------------------------")
+    navigation.setOptions({
+      headerRight: () => (
+        <View>
+          <TouchableOpacity style={styles.stackAddButton} onPress={() => onBeDriverPressHandler()}>
+            <Text style={styles.stackHeaderRightText}>Be a Driver</Text>
+          </TouchableOpacity>
+        </View>
+      )
+    })
     getOrgName()
     // console.log(orgName)
     // console.log(item)
   }, []);
-
+  
+  // find organization Name for screen
+  const [orgName, setOrgName] = useState("")
   function getOrgName() {
     // TODO: Add if there's something good to add for event info name
     // navigation.setOptions({
@@ -39,7 +50,7 @@ export default function EventInfoScreen({ route, navigation }) {
     })
   }
 
-
+  // format date time for screen
   const formatDate = (dateString) => {
     const date = dateString.split('/')
     let month = date[0]
@@ -97,6 +108,29 @@ export default function EventInfoScreen({ route, navigation }) {
 //     )    
 //   } 
 
+  const onBeDriverPressHandler = () => {
+
+    const eventData = {
+      eventId: item['value']['id'],
+      orgId: item['value']['orgId'],
+    }
+
+    navigation.navigate('Be a Driver', { eventData })
+  }
+
+  const EmptyListView = () => {
+    return (
+      <View style={styles.emptyListView}>
+        <Text style={styles.emptyListText}>
+          There aren't any rides yet!
+        </Text>
+        <Text style={styles.emptyListText}>
+          Check back later for rides.
+        </Text>
+      </View>
+    )
+  }
+
 	return (
 		<View style={styles.body}>
 			<Text style={styles.beginText}>{orgName}</Text>
@@ -110,8 +144,10 @@ export default function EventInfoScreen({ route, navigation }) {
 			style={styles.flatList}
       // TODO: sort doesn't work bu it's prolly simple fix
 			data={events.sort((a,b) => b['value']['favorite']-a['value']['favorite'] || a['value']['date'].localeCompare(b['value']['date']))} 
-			renderItem={({item}) => <EventItem item={item} />}
+			renderItem={(
+      {item}) => <EventItem item={item} />}
 			/> */}
+      <EmptyListView />
 		</View>
 	)
 }
@@ -230,5 +266,28 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 13,
+  },
+  emptyListView: {
+    marginVertical: '30%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyListText: {
+    padding: 10,
+    fontSize: 20,
+    fontWeight: '500',
+  },
+  stackAddButton: {
+    width: 90,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center', 
+  },
+  stackHeaderRightText: {
+    fontSize: 13,
+    textAlign: 'center',
+    color: 'white',
   },
 })

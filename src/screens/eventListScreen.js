@@ -40,7 +40,7 @@ export default function EventListScreen({ navigation }) {
                   // Member status and favorite data
                   onValue(ref(db, `user2event/${user.uid}/${childss.key}`), (ss) => {
                     if (ss.exists()) {
-                      memberType = ss.val()['type']
+                      memberType = ss.val()['admin']
                       favorite = ss.val()['favorite']
                     }
                     const eventInfo = {

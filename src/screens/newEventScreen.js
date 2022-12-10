@@ -204,8 +204,9 @@ export default function NewEventScreen({ navigation }) {
         // make user the host (admin) of event
         const user2eventRef = ref(db, `user2event/${user.uid}/${eventId}`)
         set(user2eventRef, {
-          type: 'admin',
-          favorite: false
+          admin: true,
+          favorite: false,
+          type: 'none' // 'driver', 'rider', or 'none'
         })
 
         navigation.navigate('My Events')

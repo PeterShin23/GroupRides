@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, KeyboardAvoidingView, View, TextInput, FlatList, TouchableOpacity, TouchableHighlight, Platform, ToastAndroid, Alert } from 'react-native';
 // import { darkTheme } from '../../utils/colors';
 import Slider from '@react-native-community/slider';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 
-import { getDatabase, ref, onValue, set, get } from 'firebase/database';
+import { getDatabase, ref, onValue, set, get, update } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
+import uid from '../../utils/uid';
 
 
 export default function NewDriverScreen({ route, navigation }) {
 
 	const { eventData } = route.params
+	const user = auth.currentUser
 
 	// car information
 	const [brand, setBrand] = useState('')
@@ -20,14 +23,38 @@ export default function NewDriverScreen({ route, navigation }) {
 	// pick up information
 	const [pickupName, setPickupName] = useState('')
 	const [pickupAddress, setPickupAddress] = useState('')
-	const [pickupTimePlaceholder, setPickupTimePlaceholder] = useState('')
-	const [pickupTime, setPickupTime] = useState('')
-  const user = auth.currentUser
+	// const [pickupTimePlaceholder, setPickupTimePlaceholder] = useState('')
+	// const [pickupTime, setPickupTime] = useState('')
+	// time
+	const [timeText, setTimeText] = useState('Select Event Time')
+	const [timeOpen, setTimeOpen] = useState(false)
+	const [time, setTime] = useState(new Date())
+
+	const onTimeChange = (event, selectedTime) => {
+		const currentTime = selectedTime || time;
+		setTimeOpen(false)
+		setTime(currentTime)
+
+		let tempTime = new Date(currentTime)
+		// console.log(tempTime)
+		let tempHours = tempTime.getHours()
+		let amPm = "AM"
+		if (tempHours > 12) {
+			tempHours = tempHours - 12
+			amPm = "PM"
+		}
+		let tempMinutes = tempTime.getMinutes()
+		if (tempMinutes < 10) {
+			tempMinutes = '0' + tempMinutes.toString()
+		}
+		let formattedTime = tempHours + ":" + tempMinutes + amPm
+		setTimeText(formattedTime)
+	}
 
   useEffect(() => {
-		console.log(eventData)
+		// console.log(eventData)
     getUserCarInformation();
-		getEventTime();
+		setDefaultTime();
 		// console.log(pickupTimePlaceholder)
   }, []);
 
@@ -51,26 +78,119 @@ export default function NewDriverScreen({ route, navigation }) {
     })
   }
 
-	function getEventTime() {
+	function setDefaultTime() {
 		const orgEventRef = ref(db, `organizationEvents/${eventData['orgId']}/${eventData['eventId']}`)
 		onValue(orgEventRef, (snapshot) => {
 
-			const time = snapshot.val()['time'].split(':')
-			let hour = parseInt(time[0])
-			let minutes = time[1]
-			let ampm = "AM"
-			if (hour > 12) {
-					hour = parseInt(hour) - 12
-					ampm = "PM"
-			}
-			setPickupTimePlaceholder("This event is at " + `${hour}:${minutes}${ampm}.`)
+			// let's get event time information
+			const date = snapshot.val()['date'].split('/')
+
+			// let's set the date time like what Google does and set all events being set as 8:00AM
+			const year = parseInt(date[2])
+			const monthIndex = parseInt(date[0])-1 // 0-indexing
+			const day = parseInt(date[1])
+			setTime(new Date(year, monthIndex, day, 8))
+			setTimeText('8:00AM')
 		})
 	}
+
+	// TODO: i'm lazy af
+	function getAvailableDriverInformation() {
+		console.log('check for existing driver information for this event')
+	}
+	
+	const AndroidDateTime = () => {
+    return (
+      <View>
+        <Text style={styles.dateTimeText}>Select Pickup Time</Text>
+        <TouchableOpacity style={styles.dateTimeButton} onPress={() => setTimeOpen(true)}>
+          <Text style={{fontSize: 16, color: '#000'}}>{timeText}</Text>
+        </TouchableOpacity>
+        {timeOpen && 
+          <RNDateTimePicker 
+          mode="time"
+          display="default"
+          value={time}
+          onChange={onTimeChange}
+          style={styles.dateTimePicker}
+          />
+        }
+      </View>
+    )
+  }
+
+  // const iOSDateTime = () => {
+  //   return (
+  //     <View>
+  //       <Text style={styles.dateTimeText}>Select Event Date</Text>
+  //       <RNDateTimePicker
+  //         mode="date"
+  //         display="default"
+  //         value={date}
+  //         onChange={onDateChange}
+  //         style={styles.dateTimePicker}
+  //       />
+  //       <Text style={styles.dateTimeText}>Select Event Time</Text>
+  //       <RNDateTimePicker
+  //         mode="time"
+  //         display="default"
+  //         value={time}
+  //         onChange={onTimeChange}
+  //         style={styles.dateTimePicker}
+  //       />
+  //     </View>
+  //   )
+  // }
 
 	function saveDriverInfo() {
 		// if user is driver, they can't be rider
 		// if they are rider, they can't be driver
-		console.log('save driver info')
+		const user2eventRef = ref(db, `user2event/${user.uid}/${eventData['eventId']}`)
+		
+		get(user2eventRef).then((snapshot) => {
+			if (!snapshot.exists()) {
+				console.log('user is not part of this organization event')
+			} else {
+				// change type to 'driver'
+				update(user2eventRef, {
+					type: 'driver'
+				})
+
+				// add/update driver information
+				const user2eventDriverRef = ref(db, `user2event/${user.uid}/${eventData['eventId']}/driverInformation`)
+				const driverInformation = {
+					brand: brand,
+					color: color,
+					type: type,
+					seatCount: seatCount,
+					pickupName: pickupName,
+					pickupAddress: pickupAddress,
+					pickupDate: time.toLocaleDateString(),
+					pickupTime: time.toLocaleTimeString(),
+				}
+				set(user2eventDriverRef, driverInformation)
+				
+				// add/update ride for event
+				const rideId = uid()
+				const eventRidesRef = ref(db, `eventRides/${eventData['orgId']}/${eventData['eventId']}/${user.uid}`)
+				const eventRide = {
+					rideId: rideId,
+					driver: user.uid,
+					riderCount: 0
+				}
+				set(eventRidesRef, eventRide)
+
+				// let the user know that it saved
+				let saveMessage = "Thanks for Driving!"
+				if (Platform.OS === 'android') {
+					ToastAndroid.show(saveMessage, ToastAndroid.SHORT)
+				} else {
+					Alert.alert(saveMessage)
+				}
+
+				navigation.goBack()
+			}
+		})
 	}
 
   return (
@@ -135,14 +255,15 @@ export default function NewDriverScreen({ route, navigation }) {
         value={pickupAddress}
         onChangeText={(value) => setPickupAddress(value)}
       />
-			{/* TODO: make this a time picker */}
-      <Text style={[styles.inputLabels, {marginLeft: 32}]}>When will you pick up?</Text>
+			{/* TODO: Figure out good way to show what event time is for reference when selecting pickup time */}
+			<AndroidDateTime />
+      {/* <Text style={[styles.inputLabels, {marginLeft: 32}]}>When will you pick up?</Text>
       <TextInput
         style={styles.input}
         placeholder={pickupTimePlaceholder}
         value={pickupTime}
         onChangeText={(value) => setPickupTime(value)}
-      />
+      /> */}
       <TouchableOpacity style={styles.button} onPress={() => saveDriverInfo()}>
         <Text style={styles.buttonText}>Let's Drive</Text>
       </TouchableOpacity>
@@ -185,5 +306,24 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 14,
+  },
+	dateTimeButton: {
+    alignSelf: 'center', // fit text
+    padding: 8,
+    // height: 40,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderColor: '#0783FF',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  dateTimeText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  dateTimePicker: {
+    marginBottom: 10,
   },
 })

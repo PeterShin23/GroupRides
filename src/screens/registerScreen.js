@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { KeyboardAvoidingView, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
@@ -13,6 +13,8 @@ const RegisterScreen = () => {
     const [password, setPassword] = useState('')
     const [username, setUsername] = useState('')
     const [profilePic, setProfilePic] = useState(null)
+    const [modalVisible, setModalVisible] = useState(false)
+    const [status, requestPermission] = ImagePicker.useCameraPermissions();
 
     const handleSignUp = () => {
         createUserWithEmailAndPassword(auth, email, password)
@@ -72,17 +74,71 @@ const RegisterScreen = () => {
         }
     }
 
+    const takePhoto = async () => {
+        if (status.canAskAgain) {
+            if (!status.granted) {
+                await requestPermission()
+            }
+            let result = await ImagePicker.launchCameraAsync({
+                allowsEditing: true,
+                aspect: [4, 3],
+            });
+
+            if (!result.canceled) {
+                setProfilePic(result.assets[0].uri)
+                setModalVisible(!modalVisible)
+            }
+        } else {
+            alert("Please go to the app in Settings in order to enable your camera.")
+        }
+
+    };
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior="padding"
         >
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    Alert.alert("Modal has been closed.");
+                    setModalVisible(!modalVisible);
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <TouchableOpacity
+                            onPress={pickImage}
+                            style={styles.choiceButtons}
+                        >
+                            <Text style={styles.closeModalText}>Choose image from camera roll</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={takePhoto}
+                            style={styles.choiceButtons}
+                        >
+                            <Text style={styles.closeModalText}>Take new image</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setModalVisible(!modalVisible)}
+                            style={styles.closeModalButton} 
+                        >
+                            <Text style={styles.closeModalText}>
+                                Close
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
             <View style={styles.imagePicker}>
                 {
                     profilePic && <Image source={{ uri: profilePic }} style={{ width: 200, height: 200 }} />
                 }
                 <View style={styles.uploadBtnContainer}>
-                    <TouchableOpacity onPress={pickImage} style={styles.uploadBtn} >
+                    <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.uploadBtn} >
                         <Text>{profilePic ? 'Edit' : 'Upload'} Profile Picture</Text>
                         <Entypo name="image" size={24} color="black" />
                     </TouchableOpacity>
@@ -194,5 +250,52 @@ const styles = StyleSheet.create({
         display: 'flex',
         alignItems: "center",
         justifyContent: 'center'
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    modalText: {
+        color: '#0783FF',
+        fontWeight: '700',
+        fontSize: 16
+    },
+    closeModalButton: {
+        marginTop: 15,
+        borderColor: 'red',
+        borderRadius: 5,
+        borderWidth: 1,
+        padding: 10,
+        backgroundColor: 'red'
+    },
+    closeModalText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    choiceButtons: {
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#0783FF',
+        borderRadius: 20,
+        marginBottom: 10,
+        backgroundColor: '#0783FF'
     }
 })

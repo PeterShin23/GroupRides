@@ -17,6 +17,7 @@
     "expo": "~47.0.3",
     "expo-cli": "^6.0.8",
     "expo-image-picker": "~14.0.2",
+    "expo-sensors": "~12.0.1",
     "expo-status-bar": "~1.4.2",
     "firebase": "^9.14.0",
     "global": "^4.4.0",
@@ -35,8 +36,7 @@
     "react-native-paper": "^5.0.0",
     "react-native-reanimated": "~2.12.0",
     "react-native-vector-icons": "^9.2.0",
-    "react-navigation": "^4.4.4",
-    "expo-sensors": "~12.0.1"
+    "react-navigation": "^4.4.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

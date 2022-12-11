@@ -58,6 +58,7 @@ export default function NewDriverScreen({ route, navigation }) {
 		// console.log(pickupTimePlaceholder)
   }, []);
 
+	// set with default if available
   function getUserCarInformation() {
     // try to retrieve user's car information
     const userCarRef = ref(db, `user2car/${user.uid}`)
@@ -78,6 +79,12 @@ export default function NewDriverScreen({ route, navigation }) {
     })
   }
 
+	// set with saved driverInformation if available (HIGHER PRIORITY THAN DEFAULT INFO)
+	// TODO: i'm lazy af rn
+	function getAvailableDriverInformation() {
+		console.log('check for existing driver information for this event')
+	}
+
 	function setDefaultTime() {
 		const orgEventRef = ref(db, `organizationEvents/${eventData['orgId']}/${eventData['eventId']}`)
 		onValue(orgEventRef, (snapshot) => {
@@ -86,17 +93,12 @@ export default function NewDriverScreen({ route, navigation }) {
 			const date = snapshot.val()['date'].split('/')
 
 			// let's set the date time like what Google does and set all events being set as 8:00AM
-			const year = parseInt(date[2])
-			const monthIndex = parseInt(date[0])-1 // 0-indexing
-			const day = parseInt(date[1])
+			const year = parseInt(date[0])
+			const monthIndex = parseInt(date[1])-1 // 0-indexing
+			const day = parseInt(date[2])
 			setTime(new Date(year, monthIndex, day, 8))
 			setTimeText('8:00AM')
 		})
-	}
-
-	// TODO: i'm lazy af
-	function getAvailableDriverInformation() {
-		console.log('check for existing driver information for this event')
 	}
 	
 	const AndroidDateTime = () => {
@@ -157,6 +159,18 @@ export default function NewDriverScreen({ route, navigation }) {
 				})
 
 				// add/update driver information
+				const date = time.toLocaleDateString().split('/')
+				let year = date[2]
+				let month = date[0]
+				if (month.length == 1) {
+					month = '0' + month
+				}
+				let day = date[1]
+				if (day.length == 1) {
+					day = '0' + day
+				}
+				const formattedDate = `${year}/${month}/${day}`
+
 				const user2eventDriverRef = ref(db, `user2event/${user.uid}/${eventData['eventId']}/driverInformation`)
 				const driverInformation = {
 					brand: brand,
@@ -165,14 +179,14 @@ export default function NewDriverScreen({ route, navigation }) {
 					seatCount: seatCount,
 					pickupName: pickupName,
 					pickupAddress: pickupAddress,
-					pickupDate: time.toLocaleDateString(),
+					pickupDate: formattedDate,
 					pickupTime: time.toLocaleTimeString(),
 				}
 				set(user2eventDriverRef, driverInformation)
 				
-				// add/update ride for event
+				// add/update ride for event <- TODO: FIGURE OUT BETTER WAY
 				const rideId = uid()
-				const eventRidesRef = ref(db, `eventRides/${eventData['orgId']}/${eventData['eventId']}/${user.uid}`)
+				const eventRidesRef = ref(db, `eventRides/${eventData['orgId']}/${eventData['eventId']}/${rideId}`)
 				const eventRide = {
 					rideId: rideId,
 					driver: user.uid,

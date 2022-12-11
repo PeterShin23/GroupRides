@@ -76,15 +76,6 @@ function Home({navigation}) {
       <bottomTab.Screen 
         name='My Events' 
         component={EventListScreen} 
-        options={{
-          headerRight: () => (
-            <View>
-              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event')}>
-                <Text style={styles.headerRightText}>Create</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        }}
       ></bottomTab.Screen>
       <bottomTab.Screen 
         name='My Organizations' 
@@ -161,15 +152,15 @@ export default function App() {
         <Stack.Screen
           name="Organization Information"
           component={OrgInfoScreen}
-          options={{
-            headerRight: () => (
-              <View>
-                <TouchableOpacity style={styles.stackAddButton}>
-                  <Text style={styles.stackHeaderRightText}>New Event</Text>
-                </TouchableOpacity>
-              </View>
-            )
-          }}
+          // options={{
+          //   headerRight: () => (
+          //     <View>
+          //       <TouchableOpacity style={styles.stackAddButton}>
+          //         <Text style={styles.stackHeaderRightText}>New Event</Text>
+          //       </TouchableOpacity>
+          //     </View>
+          //   )
+          // }}
         />
         <Stack.Screen
           name="Car Information"

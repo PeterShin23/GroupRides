@@ -14,8 +14,7 @@ import { auth, db, storage } from '../../firebase';
 export default function EventInfoScreen({ route, navigation }) {
 
   const { item } = route.params // organization information
-
-  const [rides, setRides] = useState([])
+  const user = auth.currentUser
 
   useEffect(() => {
     // console.log("------------------------------------------")
@@ -29,8 +28,7 @@ export default function EventInfoScreen({ route, navigation }) {
       )
     })
     getOrgName()
-    // console.log(orgName)
-    // console.log(item)
+    getEventRides()
   }, []);
   
   // find organization Name for screen
@@ -48,6 +46,56 @@ export default function EventInfoScreen({ route, navigation }) {
             setOrgName(orgSS.val()['name'])
         }
     })
+  }
+
+  // retrieve rides
+  const [rides, setRides] = useState([])
+  function getEventRides() {
+    console.log('lets get these events')
+    // const eventRidesRef = ref(db, `eventRides/${item['value']['orgId']}/${item['value']['id']}`)
+    // onValue(eventRidesRef, (eventRidesSS) => {
+    //   if (!eventRidesSS.exists()) {
+    //     console.log("Event doesn't exist.")
+    //   } else {
+    //     eventRidesSS.forEach((snapshot) => {
+    //       if (snapshot.exists()) {  // TODO: Figure out after figuring out newdriver (maybe add new db)
+    //         console.log(snapshot.val())
+    //         // const eventRideRef = ref(db, `eventRides/${item['value']['orgId']}/${item['value']['id']}/${user.uid}`)
+    //         // onValue(eventRideRef, (eventSnapshot) => {
+    //         //   // Make sure that an event was actually returned
+    //         //   if (eventSnapshot.exists()) {
+    //         //     // Loop through each org's event
+    //         //     eventSnapshot.forEach((childss) => {
+    //         //       // console.log(childss.val())
+    //         //       // // Assemble event information
+    //         //       const user2eventRef = ref(db, `user2event/${user.uid}/${item['value']['id']}/driverInformation`)
+    //         //       console.log(user2eventRef)
+    //         //       // onValue(ref(db, user2eventRef), (ss) => {
+                    
+    //         //       //   if (ss.exists()) {
+    //         //       //     const rideInformation = {
+    //         //       //       rideId: childss.val()['rideId'],
+    //         //       //       driver: childss.val()['driver'],
+    //         //       //       riderCount: childss.val()['riderCount'],
+    //         //       //       brand: ss.val()['brand'],
+    //         //       //       color: ss.val()['color'],
+    //         //       //       type: ss.val()['type'],
+    //         //       //       seatCount: ss.val()['seatCount'],
+    //         //       //       pickupAddress: ss.val()['pickupAddress'],
+    //         //       //       pickupName: ss.val()['pickupName'],
+    //         //       //       pickupDate: ss.val()['pickupDate'],
+    //         //       //       pickupTime: ss.val()['pickupTime'],
+    //         //       //     }
+    //         //       //     console.log(pickupInformation)
+    //         //       //   }
+    //         //       // })
+    //         //     })
+    //         //   }
+    //         // })
+    //       }
+    //     })
+    //   }
+    // })
   }
 
   // format date time for screen

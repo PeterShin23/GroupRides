@@ -7,19 +7,24 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { Accelerometer } from 'expo-sensors';
 import uid from '../../utils/uid';
 
-export default function NewEventScreen({ navigation }) {
+export default function NewEventScreen({ route, navigation }) {
+
+  const { preOrgId } = route.params
 
   const [name, setName] = useState('')
   const [destination, setDestination] = useState('')
   const [shake, setShake] = useState(false)
 
   useEffect(() => {
+    console.log("-------------------------------")
     getUserOrganizations();
     setBeginningDateTimeText();
+    console.log(selectedOrganization)
   }, []);
 
   // dropdown
-  const [selectedOrganization, setSelectedOrganization] = useState(null)
+  // TODO: put organization id as initial state, idk wtf it's not working, console in useEffect outputs selectedOrganization correctly??
+  const [selectedOrganization, setSelectedOrganization] = useState(preOrgId)
   const [userOrganizations, setUserOrganizations] = useState([])
 
   function getUserOrganizations() {
@@ -193,11 +198,27 @@ export default function NewEventScreen({ navigation }) {
       }
       else {
         // add event to selected organization
+        
+        const dateStr = date.toLocaleDateString().split('/')
+        console.log(dateStr)
+        let year = dateStr[2]
+        let month = dateStr[0]
+        if (month.length == 1) {
+          month = '0' + month
+        }
+        let day = dateStr[1]
+        if (day.length == 1) {
+          day = '0' + day
+        }
+        const formattedDate = `${year}/${month}/${day}`
+        console.log(formattedDate)
+
+
         set(orgEventRef, {
           id: eventId,
           name: name,
           destinationName: destination,
-          date: date.toLocaleDateString(),
+          date: formattedDate,
           time: time.toLocaleTimeString()
         })
 
@@ -275,12 +296,13 @@ export default function NewEventScreen({ navigation }) {
         shake &&
         <Text>Tip: Shake your device to clear inputs!</Text>
       }
+      <Text style={styles.inputLabels}>Select Organization</Text>
       <Dropdown
         style={styles.dropdown}
         placeholderStyle={styles.placeholderStyle}
         selectedTextStyle={styles.selectedTextStyle}
         maxHeight={300}
-        placeholder="Select an organization"
+        // placeholder="Select organization"
         data={userOrganizations}
         labelField="label"
         valueField="value"
@@ -321,7 +343,8 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     width: '85%',
-    margin: 16,
+    // margin: 16,
+    marginBottom: 20,
     height: 50,
     borderColor: '#0783FF',
     borderWidth: 2,

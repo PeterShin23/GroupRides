@@ -12,6 +12,15 @@ export default function EventListScreen({ navigation }) {
   const user = auth.currentUser
 
   useEffect(() => {
+    navigation.setOptions({
+        headerRight: () => (
+          <View>
+            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event', {preOrgId: null})}>
+              <Text style={styles.headerRightText}>Create</Text>
+            </TouchableOpacity>
+          </View>
+        )
+    })
     getUserEvents()
   }, [refresh])
 
@@ -43,12 +52,25 @@ export default function EventListScreen({ navigation }) {
                       memberType = ss.val()['admin']
                       favorite = ss.val()['favorite']
                     }
+
+                    let date = childss.val()['date'].split('/')
+                    let year = date[0]
+                    let month = date[1]
+                    if (month.length == 1) {
+                      month = '0' + month
+                    }
+                    let day = date[2]
+                    if (day.length == 1) {
+                      day = '0' + day
+                    }
+                    const formattedDate = `${year}/${month}/${day}`
+
                     const eventInfo = {
                       id: childss.key,
                       name: childss.val()['name'],
                       destinationName: childss.val()['destinationName'],
                       time: childss.val()['time'],
-                      date: childss.val()['date'],
+                      date: formattedDate,
                       memberType: memberType,
                       favorite: favorite,
                       orgId: orgId,
@@ -72,7 +94,16 @@ export default function EventListScreen({ navigation }) {
   }
 
   const eventInfoPressHandler = (item) => {
+    // console.log("-------from event list screen----------")
+    // console.log(item)
     navigation.navigate('Event Information', {item})
+  }
+
+  const formatDate = (dateString) => {
+    const date = dateString.split('/')
+    let month = date[1]
+    let day = parseInt(date[2])
+    return `${month}/${day}`
   }
 
   const markFavoriteEvent = (eventId, isFavorite) => {
@@ -99,7 +130,7 @@ export default function EventListScreen({ navigation }) {
       <View style={styles.eventItem}>
         <View>
           <Text style={styles.dateText}>
-            {item['value']['date']}
+            {formatDate(item['value']['date'])}
           </Text>
         </View>
         <View style={{ flex: 1, marginLeft: 2 }}>
@@ -224,5 +255,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 20,
     borderRadius: 3,
-  }
+  },
+  addButton: {
+    width: 70,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center', 
+    marginRight: 15,
+  },
+  headerRightText: {
+    fontSize: 15,
+    textAlign: 'center',
+    color: 'white',
+  },
 })

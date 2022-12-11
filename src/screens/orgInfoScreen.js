@@ -21,7 +21,14 @@ export default function OrgInfoScreen({ route, navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-			headerTitle: item['value']['name']
+			headerTitle: item['value']['name'],
+      headerRight: () => (
+        <View>
+          <TouchableOpacity style={styles.stackAddButton} onPress={() => newEventPressHandler()}>
+            <Text style={styles.stackHeaderRightText}>New Event</Text>
+          </TouchableOpacity>
+        </View>
+      )
 	  })
     // console.log("------------------------------------------")
     getOrganizationEvents();
@@ -30,7 +37,8 @@ export default function OrgInfoScreen({ route, navigation }) {
 
   function getOrganizationEvents() {
     // get all events by the organization
-    const orgEventsRef = ref(db, `organizationEvents/${item['value']['id']}`);
+    const orgId = item['value']['id']
+    const orgEventsRef = ref(db, `organizationEvents/${orgId}`);
     onValue(orgEventsRef, (snapshot) => {
       var orgEvents = []
       if (!snapshot.exists()) {
@@ -42,18 +50,19 @@ export default function OrgInfoScreen({ route, navigation }) {
             // console.log(snapshot.val())
             const eventId = snapshot.val()['id']
             let date = snapshot.val()['date'].split('/')
-            let month = date[0]
+            let year = date[0]
+            let month = date[1]
             if (month.length == 1) {
               month = '0' + month
             }
-            let day = date[1]
+            let day = date[2]
             if (day.length == 1) {
               day = '0' + day
             }
-            let year = date[2]
             const formattedDate = `${year}/${month}/${day}`
-            
             const name = snapshot.val()['name']
+            const destinationName = snapshot.val()['destinationName']
+            const time = snapshot.val()['time']
             
             const user2eventRef = ref(db, `user2event/${user.uid}/${eventId}`)
             onValue(user2eventRef, (ueSnapshot) => {
@@ -62,13 +71,18 @@ export default function OrgInfoScreen({ route, navigation }) {
               } else {
                 // console.log(ueSnapshot.val())
                 const favorite = ueSnapshot.val()['favorite']
+                const memberType = ueSnapshot.val()['admin']
 
                 // put information together
                 const eventInfo = {
                   id: eventId,
-                  eventName: name,
+                  name: name,
                   date: formattedDate,
-                  favorite: favorite
+                  favorite: favorite,
+                  destinationName: destinationName,
+                  memberType: memberType,
+                  orgId: orgId,
+                  time: time
                 }
 
                 // push to event list
@@ -99,6 +113,16 @@ export default function OrgInfoScreen({ route, navigation }) {
     })
   }
 
+  const eventInfoPressHandler = (item) => {
+    // console.log("-------from org info screen----------")
+    // console.log(item)
+    navigation.navigate('Event Information', {item})
+  }
+
+  const newEventPressHandler = () => {
+    navigation.navigate('New Event', {preOrgId: `@${item['value']['id']}`})
+  }
+
   const EventItem = ({item}) => {
     return (
     <View style={styles.eventItem}>
@@ -109,7 +133,7 @@ export default function OrgInfoScreen({ route, navigation }) {
       </View>
       <View style={{flex:1, marginLeft: 10}}>
         <Text style={styles.text}>
-            {item['value']['eventName']}
+            {item['value']['name']}
         </Text>
       </View>
       <View>
@@ -150,7 +174,10 @@ export default function OrgInfoScreen({ route, navigation }) {
 			style={styles.flatList}
       // TODO: sort doesn't work bu it's prolly simple fix
 			data={events.sort((a,b) => b['value']['favorite']-a['value']['favorite'] || a['value']['date'].localeCompare(b['value']['date']))} 
-			renderItem={({item}) => <EventItem item={item} />}
+      renderItem={({item}) => 
+        <TouchableOpacity onPress={() => eventInfoPressHandler(item)}>
+          <EventItem item={item} />
+        </TouchableOpacity>}
 			/>
 		</View>
 	)
@@ -241,5 +268,18 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 13,
+  },
+  stackAddButton: {
+    width: 90,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: '#49b3b3',
+    justifyContent: 'center',
+    alignItems: 'center', 
+  },
+  stackHeaderRightText: {
+    fontSize: 13,
+    textAlign: 'center',
+    color: 'white',
   },
 })

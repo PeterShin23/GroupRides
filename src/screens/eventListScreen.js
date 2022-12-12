@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, ToastAndroid} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, ToastAndroid, Alert } from 'react-native';
 import { onValue, ref, set, get, update } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -12,6 +12,19 @@ export default function EventListScreen({ navigation }) {
   const user = auth.currentUser
 
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      getUserEvents()
+    });
+
+    // Return the function to unsubscribe from the event so it gets removed on unmount
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
+    getUserEvents()
+  }, [refresh])
+
+  useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <View>
@@ -22,10 +35,6 @@ export default function EventListScreen({ navigation }) {
       )
     })
   }, [])
-
-  useEffect(() => {
-    getUserEvents()
-  }, [refresh])
 
   function getUserEvents() {
     const user2orgRef = ref(db, `user2organization/${user.uid}`)
@@ -47,15 +56,14 @@ export default function EventListScreen({ navigation }) {
                 // Loop through each org's event
                 eventSnapshot.forEach((childss) => {
                   // Assemble event information
-                  var memberType = ''
+                  var memberType = 'none'
                   var favorite = false
                   // Member status and favorite data
                   onValue(ref(db, `user2event/${user.uid}/${childss.key}`), (ss) => {
                     if (ss.exists()) {
-                      memberType = ss.val()['admin']
+                      memberType = ss.val()['type']
                       favorite = ss.val()['favorite']
                     }
-
                     let date = childss.val()['date'].split('/')
                     let year = date[0]
                     let month = date[1]
@@ -156,6 +164,22 @@ export default function EventListScreen({ navigation }) {
           <Text style={styles.idText}>
             @{orgId}
           </Text>
+        </View>
+        <View style={{ alignSelf: 'center' }}>
+          {
+            item['value']['memberType'] == 'driver' &&
+            <Text style={styles.joinedLabelText}>
+              <Ionicons name="md-checkmark-circle" size={28} color="green" />
+              Driver!
+            </Text>
+          }
+          {
+            item['value']['memberType'] == 'rider' &&
+            <Text style={styles.joinedLabelText}>
+              <Ionicons name="md-checkmark-circle" size={28} color="green" />
+              Rider!
+            </Text>
+          }
         </View>
         <View>
           {item['value']['favorite'] && (
@@ -294,5 +318,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     color: 'white',
+  },
+  joinedLabelText: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '400',
+    marginRight: 15
   },
 })

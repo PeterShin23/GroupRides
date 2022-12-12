@@ -200,6 +200,7 @@ const RideInfoScreen = ({ route, navigation }) => {
                         language: 'en',
                     }}
                 />
+                <Text style={styles.dateTimeText}>Current Pickup Time: {rideInfo.pickupTime}</Text>
                 {Platform.OS === 'android' && <AndroidDateTime />}
                 {Platform.OS === 'ios' &&
                     <View>

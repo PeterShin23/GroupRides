@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight, ToastAndroid} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight, ToastAndroid, Alert } from 'react-native';
 // import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 // import Modal from 'react-native-modal';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -7,7 +7,7 @@ import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-navigation';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import { onValue, ref, set, update } from 'firebase/database';
+import { onValue, ref, remove, set, update, get, child } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 
 
@@ -21,7 +21,7 @@ export default function OrgInfoScreen({ route, navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-			headerTitle: item['value']['name'],
+      headerTitle: item['value']['name'],
       headerRight: () => (
         <View>
           <TouchableOpacity style={styles.stackAddButton} onPress={() => newEventPressHandler()}>
@@ -29,7 +29,7 @@ export default function OrgInfoScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       )
-	  })
+    })
     // console.log("------------------------------------------")
     getOrganizationEvents();
     // console.log(events)
@@ -63,33 +63,33 @@ export default function OrgInfoScreen({ route, navigation }) {
             const name = snapshot.val()['name']
             const destinationName = snapshot.val()['destinationName']
             const time = snapshot.val()['time']
-            
+
             const user2eventRef = ref(db, `user2event/${user.uid}/${eventId}`)
             onValue(user2eventRef, (ueSnapshot) => {
-              if (ueSnapshot.val() === null) {
-                console.log('user is not associated with this event')
-              } else {
-                // console.log(ueSnapshot.val())
-                const favorite = ueSnapshot.val()['favorite']
-                const memberType = ueSnapshot.val()['admin']
-
-                // put information together
-                const eventInfo = {
-                  id: eventId,
-                  name: name,
-                  date: formattedDate,
-                  favorite: favorite,
-                  destinationName: destinationName,
-                  memberType: memberType,
-                  orgId: orgId,
-                  time: time
-                }
-
-                // push to event list
-                orgEvents.push({label: eventId, value: eventInfo})
-                setEvents(orgEvents)
+              var favorite = false
+              var memberType = 'none'
+              if (ueSnapshot.exists()) {
+                favorite = ueSnapshot.val()['favorite']
+                memberType = ueSnapshot.val()['type']
               }
-            })
+
+              // put information together
+              const eventInfo = {
+                id: eventId,
+                name: name,
+                date: formattedDate,
+                favorite: favorite,
+                destinationName: destinationName,
+                memberType: memberType,
+                orgId: orgId,
+                time: time
+              }
+
+              // push to event list
+              orgEvents.push({ label: eventId, value: eventInfo })
+              setEvents(orgEvents)
+            }
+            )
           }
         })
       }
@@ -130,71 +130,141 @@ export default function OrgInfoScreen({ route, navigation }) {
   const eventInfoPressHandler = (item) => {
     // console.log("-------from org info screen----------")
     // console.log(item)
-    navigation.navigate('Event Information', {item})
+    navigation.navigate('Event Information', { item })
   }
 
   const newEventPressHandler = () => {
-    navigation.navigate('New Event', {preOrgId: `@${item['value']['id']}`})
+    navigation.navigate('New Event', { preOrgId: `@${item['value']['id']}` })
   }
 
-  const EventItem = ({item}) => {
-    return (
-    <View style={styles.eventItem}>
-      <View>
-        <Text style={styles.text}>
-            {formatDate(item['value']['date'])}
-        </Text>
-      </View>
-      <View style={{flex:1, marginLeft: 10}}>
-        <Text style={styles.text}>
-            {item['value']['name']}
-        </Text>
-      </View>
-      <View>
-        {item['value']['favorite'] && (
-          <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
-            <Ionicons name='heart' size={25} color={'#ed2939'}></Ionicons>
-          </TouchableOpacity>
-        )}
-        {!item['value']['favorite'] && (
-          <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
-            <Ionicons name='heart-outline' size={25} color={'#ed2939'}></Ionicons>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-    )    
-  } 
+  const leaveOrgAlert = () => {
+    Alert.alert(
+      "Leave Organization?",
+      "Do you really want to leave this organization?",
+      [
+        {
+          text: "No",
+          style: "cancel"
+        },
+        { text: "Yes", onPress: () => onLeaveOrgHandler() }
+      ]
+    )
+  }
 
-	return (
-		<View style={styles.body}>
-			<View >
-				<TouchableHighlight
-					style = { [styles.orgPic, {
-						backgroundColor:'#bbf1f1',
-						justifyContent: 'center',
-						alignItems: 'center',
-						}]
-					}
-				> 
-					<Text style={styles.orgLetter}>{item['value']['name'].substring(0,1).toUpperCase()}</Text>
-				</TouchableHighlight>
-			</View>
-			<Text style={styles.idText}>@{item['value']['id']}</Text>
-			<Text style={styles.headerText}>Upcoming Events</Text>
-			<FlatList
-			showsVerticalScrollingIndicator={true}
-			contentContainerStyle={{padding:15}}
-			style={styles.flatList}
-      // TODO: sort doesn't work bu it's prolly simple fix
-			data={events.sort((a,b) => b['value']['favorite']-a['value']['favorite'] || a['value']['date'].localeCompare(b['value']['date']))} 
-      renderItem={({item}) => 
-        <TouchableOpacity onPress={() => eventInfoPressHandler(item)}>
-          <EventItem item={item} />
-        </TouchableOpacity>}
-			/>
-		</View>
-	)
+  function onLeaveOrgHandler() {
+    const orgId = item['value']['id']
+    // First remove user from organization join table
+    remove(ref(db, `user2organization/${user.uid}/${orgId}`))
+    // Then remove user from all events associated with that org
+    get(ref(db, `organizationEvents/${orgId}`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        snapshot.forEach((childss) => {
+          const eventId = childss.val()['id']
+          remove(ref(db, `user2event/${user.uid}/${eventId}`)).catch(() => {
+            console.log("No such user2event entry exists!")
+          })
+
+          // Also need to remove any rides the user was a part of per event
+          const rideRef = ref(db, `eventRides/${orgId}/${eventId}`)
+          get(rideRef).then((ss) => {
+            ss.forEach((ridess) => {
+              // If current user is a driver, delete from db
+              if (ridess.exists()) {
+                if (ridess.val()['driver'] == user.uid) {
+                  remove(`eventRides/${orgId}/${eventId}/${ridess.val()['rideId']}`).catch(() => {
+                    console.log("No such eventRides entry exists!")
+                  })
+                }
+              }
+            })
+          })
+        })
+      }
+    }).finally(() => {
+      navigation.navigate("Home")
+    })
+  }
+
+  const EventItem = ({ item }) => {
+    return (
+      <View style={styles.eventItem}>
+        <View>
+          <Text style={styles.text}>
+            {formatDate(item['value']['date'])}
+          </Text>
+        </View>
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={styles.text}>
+            {item['value']['name']}
+          </Text>
+        </View>
+        <View style={{ alignSelf: 'center' }}>
+          {
+            item['value']['memberType'] == 'driver' &&
+            <Text style={styles.joinedLabelText}>
+              <Ionicons name="md-checkmark-circle" size={28} color="green" />
+              Driver!
+            </Text>
+          }
+          {
+            item['value']['memberType'] == 'rider' &&
+            <Text style={styles.joinedLabelText}>
+              <Ionicons name="md-checkmark-circle" size={28} color="green" />
+              Rider!
+            </Text>
+          }
+        </View>
+        <View>
+          {item['value']['favorite'] && (
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
+              <Ionicons name='heart' size={25} color={'#ed2939'}></Ionicons>
+            </TouchableOpacity>
+          )}
+          {!item['value']['favorite'] && (
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => { markFavoriteEvent(item['value']['id'], item['value']['favorite']) }}>
+              <Ionicons name='heart-outline' size={25} color={'#ed2939'}></Ionicons>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    )
+  }
+
+  return (
+    <View style={styles.body}>
+      <View >
+        <TouchableHighlight
+          style={[styles.orgPic, {
+            backgroundColor: '#bbf1f1',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }]
+          }
+        >
+          <Text style={styles.orgLetter}>{item['value']['name'].substring(0, 1).toUpperCase()}</Text>
+        </TouchableHighlight>
+      </View>
+      <Text style={styles.idText}>@{item['value']['id']}</Text>
+      <Text style={styles.headerText}>Upcoming Events</Text>
+      <FlatList
+        showsVerticalScrollingIndicator={true}
+        contentContainerStyle={{ padding: 15 }}
+        style={styles.flatList}
+        // TODO: sort doesn't work bu it's prolly simple fix
+        data={events.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['date'].localeCompare(b['value']['date']))}
+        renderItem={({ item }) =>
+          <TouchableOpacity onPress={() => eventInfoPressHandler(item)}>
+            <EventItem item={item} />
+          </TouchableOpacity>}
+      />
+      {
+        item['value']['memberType'] == "member" &&
+        <TouchableOpacity style={styles.deleteButton} onPress={() => leaveOrgAlert()}>
+          <Text style={styles.buttonText}>Leave Organization</Text>
+        </TouchableOpacity>
+      }
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -202,30 +272,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-	idText: {
-		fontSize: 15,
-		fontWeight: '500',
-		textAlign: 'center',
+  idText: {
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'center',
     marginTop: 10,
     marginBottom: 5,
-		// padding: 10,
-	},
-	headerText: {
-		fontSize: 25,
-		fontWeight: '500',
-		textAlign: 'left',
-		marginHorizontal: 30,
+    // padding: 10,
+  },
+  headerText: {
+    fontSize: 25,
+    fontWeight: '500',
+    textAlign: 'left',
+    marginHorizontal: 30,
     marginBottom: 5,
-	},
+  },
   text: {
     fontSize: 20,
     fontWeight: '500',
     textAlign: 'left',
   },
-	flatList: {
-    flexGrow:0,
-		top:0,
-		bottom:100,
+  flatList: {
+    flexGrow: 0,
+    top: 0,
+    bottom: 100,
   },
   eventItem: {
     padding: 20,
@@ -235,14 +305,14 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: 'white'
   },
-	orgPic: {
+  orgPic: {
     width: 150,
     height: 150,
     borderRadius: 150,
     color: 'black',
     justifyContent: 'center',
-		marginTop: 25,
-		alignSelf: 'center'
+    marginTop: 25,
+    alignSelf: 'center'
   },
   orgLetter: {
     fontSize: 25,
@@ -267,8 +337,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
-    alignItems: 'center', 
-		alignSelf: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
     position: 'absolute',
     bottom: 40,
     elevation: 2,
@@ -289,11 +359,30 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   stackHeaderRightText: {
     fontSize: 13,
     textAlign: 'center',
     color: 'white',
+  },
+  joinedLabelText: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '400',
+    marginRight: 15
+  },
+  deleteButton: {
+    height: 40,
+    width: "85%",
+    borderRadius: 10,
+    backgroundColor: '#FF0000',
+    alignSelf: 'center',
+  }, 
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10
   },
 })

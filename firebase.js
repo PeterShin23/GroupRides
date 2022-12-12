@@ -27,3 +27,5 @@ export const auth = getAuth(app)
 export const db = getDatabase(app)
 
 export const storage = getStorage(app)
+
+export const mapsApiKey = 'AIzaSyAcD8ZVlGc_OCPVh5Yi-1CVigHqba41rmo'

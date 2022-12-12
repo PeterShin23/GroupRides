@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, StatusBar, Dimensions,} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, StatusBar, Dimensions, } from 'react-native';
 import { onValue, ref, set, get, update } from 'firebase/database';
 import { auth, db, storage } from '../../firebase';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -13,14 +13,17 @@ export default function EventListScreen({ navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-        headerRight: () => (
-          <View>
-            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event', {preOrgId: null})}>
-              <Text style={styles.headerRightText}>Create</Text>
-            </TouchableOpacity>
-          </View>
-        )
+      headerRight: () => (
+        <View>
+          <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('New Event', { preOrgId: null })}>
+            <Text style={styles.headerRightText}>Create</Text>
+          </TouchableOpacity>
+        </View>
+      )
     })
+  }, [])
+
+  useEffect(() => {
     getUserEvents()
   }, [refresh])
 
@@ -75,7 +78,7 @@ export default function EventListScreen({ navigation }) {
                       favorite: favorite,
                       orgId: orgId,
                     }
-  
+
                     // Finally push to temp list of events
                     tempEvents.push({ label: childss.key, value: eventInfo })
                     setEventItems(tempEvents)
@@ -96,7 +99,7 @@ export default function EventListScreen({ navigation }) {
   const eventInfoPressHandler = (item) => {
     // console.log("-------from event list screen----------")
     // console.log(item)
-    navigation.navigate('Event Information', {item})
+    navigation.navigate('Event Information', { item })
   }
 
   const formatDate = (dateString) => {
@@ -118,14 +121,14 @@ export default function EventListScreen({ navigation }) {
   const EventItem = ({ item }) => {
     // console.log("inside eventitem")
     let orgId = item.value.orgId
-    // TODO: REPLACE ORGID WITH ORGNAME
+    // TODO: REPLACE ORGID WITH ORGNAME (low priority)
     // var orgName = ''
     // get(ref(db, `organization/${orgId}`)).then((snapshot) => {
     //   if (snapshot.exists()) {
     //     orgName = snapshot.val()['name']
     //   }
     // })
-    
+
     return (
       <View style={styles.eventItem}>
         <View>
@@ -162,12 +165,16 @@ export default function EventListScreen({ navigation }) {
       <FlatList
         showsVerticalScrollingIndicator={true}
         contentContainerStyle={{ padding: 15, paddingBottom: 100 }}
-        data={eventItems.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['name'].localeCompare(b['value']['name']))}
-        renderItem={({ item }) => 
+        data={eventItems.sort((a, b) => b['value']['favorite'] - a['value']['favorite'] || a['value']['date'].localeCompare(b['value']['date']))}
+        renderItem={({ item }) =>
           <TouchableOpacity onPress={() => eventInfoPressHandler(item)}>
             <EventItem item={item} />
           </TouchableOpacity>}
       />
+      {
+        eventItems.length == 0 &&
+        <Text style={styles.noEventText}>There are no events going on. Please join an organization to make an event!</Text>
+      }
     </View>
   )
 }
@@ -237,6 +244,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'left',
   },
+  noEventText: {
+    fontSize: 20,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   idText: {
     fontSize: 15,
     fontWeight: '500',
@@ -262,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
     marginRight: 15,
   },
   headerRightText: {

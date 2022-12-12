@@ -20,6 +20,7 @@ import EventInfoScreen from './src/screens/eventInfoScreen';
 import CarInfoScreen from './src/screens/carInfoScreen';
 import NewDriverScreen from './src/screens/newDriverScreen';
 import RideInfoScreen from './src/screens/rideInfoScreen';
+import EventEditScreen from './src/screens/eventEditScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -177,6 +178,13 @@ export default function App() {
           component={RideInfoScreen}
           options={{
             headerTitle: "Ride Information"
+          }}
+        />
+        <Stack.Screen
+          name="Edit Event"
+          component={EventEditScreen}
+          options={{
+            headerTitle: "Edit Event"
           }}
         />
       </Stack.Navigator>

@@ -18,17 +18,19 @@ export default function EventInfoScreen({ route, navigation }) {
     // retrieve rides
     const [rides, setRides] = useState([])
     const [refresh, setRefresh] = useState(false)
+    const [headerRefresh, setHeaderRefresh] = useState(false)
     // Is the user a driver, rider, or none
     const [userType, setUserType] = useState('')
     // Is the user the admin of this event (can they edit it?)
     const [userAdmin, setUserAdmin] = useState(false)
 
     useEffect(() => {
-        // console.log("------------------------------------------")
-
         getOrgName()
         getEventRides()
         getUserStatus()
+    }, [refresh]);
+
+    useEffect(() => {
         navigation.setOptions({
             headerRight: () => (
                 <View>
@@ -41,7 +43,7 @@ export default function EventInfoScreen({ route, navigation }) {
                 </View>
             )
         })
-    }, []);
+    }, [headerRefresh])
 
     // find organization Name for screen
     const [orgName, setOrgName] = useState("")
@@ -107,6 +109,7 @@ export default function EventInfoScreen({ route, navigation }) {
                                             pickupName: pickupName,
                                             pickupTime: pickupTime,
                                         }
+                                        // console.log(rideInformation)
                                         tempRides.push({ label: rideid, value: rideInformation })
                                         setRides(tempRides)
                                     }
@@ -124,8 +127,14 @@ export default function EventInfoScreen({ route, navigation }) {
             if (snapshot.exists()) {
                 setUserType(snapshot.val()["type"])
                 setUserAdmin(snapshot.val()["admin"])
+                // console.log(snapshot.val()['admin'])
+            }
+            else {
+                setUserType("none")
+                setUserAdmin(false)
             }
         })
+        setHeaderRefresh(!headerRefresh)
     }
 
     // format date time for screen
@@ -164,9 +173,8 @@ export default function EventInfoScreen({ route, navigation }) {
             orgId: item['value']['orgId'],
             time: item['value']['time']
         }
-
-        navigation.navigate('Be a Driver', { eventData })
         setRefresh(!refresh)
+        navigation.navigate('Be a Driver', { eventData })
     }
 
     const EmptyListView = () => {
@@ -197,7 +205,7 @@ export default function EventInfoScreen({ route, navigation }) {
                 <Text style={styles.riderCountText}>Riders: {rideInfo.riderCount} (Max {rideInfo.seatCount})</Text>
                 {
                     showButton &&
-                    <TouchableOpacity style={styles.joinRiderButton} onPress={onJoinAsRider(rideInfo)}>
+                    <TouchableOpacity style={styles.joinRiderButton} onPress={() => onJoinAsRider(rideInfo)}>
                         <Text>Join as Rider</Text>
                     </TouchableOpacity>
                 }
@@ -237,6 +245,7 @@ export default function EventInfoScreen({ route, navigation }) {
         }).catch(() => {
             console.error("I don't work :(")
         })
+        setRefresh(!refresh)
     }
 
     const onPressRideItem = (rideInfo) => {
@@ -245,12 +254,17 @@ export default function EventInfoScreen({ route, navigation }) {
         navigation.navigate("Ride Information", {rideInfo, eventData, userType})
     }
 
+    const onPressEdit = () => {
+        let eventData = item['value']
+        navigation.navigate("Edit Event", {eventData, orgName})
+    }
+
     return (
         <View style={styles.body}>
             <Text style={styles.beginText}>{orgName}</Text>
             <Text style={styles.hostingText}>is Hosting:</Text>
             <Text style={styles.eventText}>{item['value']['name']}!</Text>
-            <Text style={styles.timeText}>Event is at {item['value']['time']} on {formatDate(item['value']['date'])}.</Text>
+            <Text style={styles.timeText}>Event is at {item['value']['time']} on {item['value']['date'].substring(5)}.</Text>
             <TouchableOpacity onPress={openMap}>
                 <Text style={styles.destinationText}>
                     Destination: {item['value']['destinationName']}
@@ -268,6 +282,13 @@ export default function EventInfoScreen({ route, navigation }) {
                             </TouchableOpacity>}
                     />
             }
+            {
+                userAdmin ? 
+                <TouchableOpacity style={styles.addButton} onPress={() => onPressEdit()}>
+                    <Text style={{fontSize: 16, fontWeight: '600'}}>Edit Event</Text>
+                </TouchableOpacity> : <View></View>
+            }
+            
         </View>
     )
 }

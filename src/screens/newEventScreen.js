@@ -351,7 +351,7 @@ export default function NewEventScreen({ route, navigation }) {
           </View>
         }
         <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
-          <Text style={styles.buttonText}>Save</Text>
+          <Text style={styles.buttonText}>Create</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

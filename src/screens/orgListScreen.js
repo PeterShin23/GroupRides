@@ -93,7 +93,6 @@ export default function OrgListScreen({ navigation }) {
   }
 
   const joinOrgPressHandler = () => {
-    console.log(`join organization: ${selectedOrganization}`)
 
     // let's add user to org as 'member'
     const user2organizationRef = ref(db, `user2organization/${user.uid}/${selectedOrganization}`);
@@ -108,7 +107,7 @@ export default function OrgListScreen({ navigation }) {
           memberType: 'member'
         })
 
-        let joinMessage = `Joined @${selectedOrganization}`
+        let joinMessage = `Joining @${selectedOrganization}`
         if (Platform.OS === 'android') {
           ToastAndroid.show(joinMessage, ToastAndroid.SHORT)
         } else {
@@ -116,51 +115,28 @@ export default function OrgListScreen({ navigation }) {
         }
 
         setRefresh(!refresh)
+
+        // now that we added them to the organization, let's add the user to every event in the organization in the background
+        const organizationEventsRef = ref(db, `organizationEvents/${selectedOrganization}`)
+        get(organizationEventsRef).then((eventsSS) => {
+          if (!eventsSS.exists()) {
+            console.log("The organization doesn't have events")
+          } else {
+            // console.log(eventsSS.val())
+            for (var eventId in eventsSS.val()) {
+              const user2eventRef = ref(db, `user2event/${user.uid}/${eventId}`);
+              
+              // add member information
+              set(user2eventRef, {
+                admin: false,
+                favorite: false,
+                type: "none"
+              })
+            }
+          }
+        })
       }
     })
-    // get(orgEventRef).then((snapshot) => {
-    //   // If the snapshot exists, it means the eventId exists already
-    //   if (snapshot.exists()) {
-    //     console.error("Event with ID: " + eventId + " already exists!")
-    //     alert("Event with ID: " + eventId + " already exists! Please try again.")
-    //   }
-    //   else {
-    //     // add event to selected organization
-        
-    //     const dateStr = date.toLocaleDateString().split('/')
-    //     console.log(dateStr)
-    //     let year = dateStr[2]
-    //     let month = dateStr[0]
-    //     if (month.length == 1) {
-    //       month = '0' + month
-    //     }
-    //     let day = dateStr[1]
-    //     if (day.length == 1) {
-    //       day = '0' + day
-    //     }
-    //     const formattedDate = `${year}/${month}/${day}`
-    //     console.log(formattedDate)
-
-
-    //     set(orgEventRef, {
-    //       id: eventId,
-    //       name: name,
-    //       destinationName: destination,
-    //       date: formattedDate,
-    //       time: time.toLocaleTimeString()
-    //     })
-
-    //     // make user the host (admin) of event
-    //     const user2eventRef = ref(db, `user2event/${user.uid}/${eventId}`)
-    //     set(user2eventRef, {
-    //       admin: true,
-    //       favorite: false,
-    //       type: 'none' // 'driver', 'rider', or 'none'
-    //     })
-
-    //     navigation.navigate('My Events')
-    //   }
-    // })
 
   }
 

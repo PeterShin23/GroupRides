@@ -1,11 +1,13 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, ScrollView, Platform } from 'react-native';
 import { ref, onValue, set, get, child } from 'firebase/database';
-import { auth, db, storage } from '../../firebase';
+import { auth, db, mapsApiKey } from '../../firebase';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Accelerometer } from 'expo-sensors';
 import uid from '../../utils/uid';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { LogBox } from 'react-native';
 
 export default function NewEventScreen({ route, navigation }) {
 
@@ -16,14 +18,15 @@ export default function NewEventScreen({ route, navigation }) {
   const [shake, setShake] = useState(false)
 
   useEffect(() => {
-    console.log("-------------------------------")
+    // console.log("-------------------------------")
+    // console.log(preOrgId)
+    setSelectedOrganization(preOrgId)
     getUserOrganizations();
     setBeginningDateTimeText();
-    console.log(selectedOrganization)
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
   }, []);
 
   // dropdown
-  // TODO: put organization id as initial state, idk wtf it's not working, console in useEffect outputs selectedOrganization correctly??
   const [selectedOrganization, setSelectedOrganization] = useState(preOrgId)
   const [userOrganizations, setUserOrganizations] = useState([])
 
@@ -125,56 +128,35 @@ export default function NewEventScreen({ route, navigation }) {
         </Pressable> */}
         <Text style={styles.dateTimeText}>Select Event Date</Text>
         <TouchableOpacity style={styles.dateTimeButton} onPress={() => setDateOpen(true)}>
-          <Text style={{fontSize: 16, color: '#000'}}>{dateText}</Text>
+          <Text style={{ fontSize: 16, color: '#000' }}>{dateText}</Text>
         </TouchableOpacity>
-        {dateOpen && 
-          <RNDateTimePicker 
-          mode="date"
-          display="default"
-          value={date}
-          onChange={onDateChange}
-          style={styles.dateTimePicker}
+        {dateOpen &&
+          <RNDateTimePicker
+            mode="date"
+            display="default"
+            value={date}
+            onChange={onDateChange}
+            style={styles.dateTimePicker}
           />
         }
         <Text style={styles.dateTimeText}>Select Event Time</Text>
         <TouchableOpacity style={styles.dateTimeButton} onPress={() => setTimeOpen(true)}>
-          <Text style={{fontSize: 16, color: '#000'}}>{timeText}</Text>
+          <Text style={{ fontSize: 16, color: '#000' }}>{timeText}</Text>
         </TouchableOpacity>
-        {timeOpen && 
-          <RNDateTimePicker 
-          mode="time"
-          display="default"
-          value={time}
-          onChange={onTimeChange}
-          style={styles.dateTimePicker}
+        {timeOpen &&
+          <RNDateTimePicker
+            mode="time"
+            display="default"
+            value={time}
+            onChange={onTimeChange}
+            style={styles.dateTimePicker}
           />
         }
       </View>
     )
   }
 
-  const iOSDateTime = () => {
-    return (
-      <View>
-        <Text style={styles.dateTimeText}>Select Event Date</Text>
-        <RNDateTimePicker
-          mode="date"
-          display="default"
-          value={date}
-          onChange={onDateChange}
-          style={styles.dateTimePicker}
-        />
-        <Text style={styles.dateTimeText}>Select Event Time</Text>
-        <RNDateTimePicker
-          mode="time"
-          display="default"
-          value={time}
-          onChange={onTimeChange}
-          style={styles.dateTimePicker}
-        />
-      </View>
-    )
-  }
+
 
   function onCreateEventHandler() {
     // console.log("create event")
@@ -198,7 +180,7 @@ export default function NewEventScreen({ route, navigation }) {
       }
       else {
         // add event to selected organization
-        
+
         const dateStr = date.toLocaleDateString().split('/')
         console.log(dateStr)
         let year = dateStr[2]
@@ -291,47 +273,88 @@ export default function NewEventScreen({ route, navigation }) {
   });
 
   return (
-    <View style={styles.body}>
-      {
-        shake &&
-        <Text>Tip: Shake your device to clear inputs!</Text>
-      }
-      <Text style={styles.inputLabels}>Select Organization</Text>
-      <Dropdown
-        style={styles.dropdown}
-        placeholderStyle={styles.placeholderStyle}
-        selectedTextStyle={styles.selectedTextStyle}
-        maxHeight={300}
-        // placeholder="Select organization"
-        data={userOrganizations}
-        labelField="label"
-        valueField="value"
-        value={selectedOrganization}
-        onChange={item => {
-          setSelectedOrganization(item.value);
-        }}
+    <ScrollView style={{ width: "100%", height: "100%", backgroundColor: 'white' }} keyboardShouldPersistTaps={'always'} >
+      <View style={styles.body}>
+        {
+          shake &&
+          <Text>Tip: Shake your device to clear inputs!</Text>
+        }
+        <Text style={styles.inputLabels}>Select Organization</Text>
+        <Dropdown
+          style={styles.dropdown}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          maxHeight={300}
+          // placeholder="Select organization"
+          data={userOrganizations}
+          labelField="label"
+          valueField="value"
+          value={selectedOrganization}
+          placeholder={selectedOrganization ? `${selectedOrganization}` : 'Select an organization.'}
+          onChange={item => {
+            setSelectedOrganization(item.value);
+          }}
 
-      />
-      <Text style={styles.inputLabels}>Event Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Event Name"
-        value={name}
-        onChangeText={(value) => setName(value)}
-      />
-      <Text style={styles.inputLabels}>Event Destination</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Event Destination"
-        value={destination}
-        onChangeText={(value) => setDestination(value)}
-      />
-      {Platform.OS === 'android' && <AndroidDateTime />}
-      {Platform.OS === 'ios' && <iOSDateTime />}
-      <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
-    </View>
+        />
+        <Text style={styles.inputLabels}>Event Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Event Name"
+          value={name}
+          onChangeText={(value) => setName(value)}
+        />
+        <Text style={styles.inputLabels}>Event Destination</Text>
+        <GooglePlacesAutocomplete
+          styles={{
+            container: {
+              width: '85%',
+              flex: 1,
+              marginBottom: 10
+            },
+            textInput: {
+              borderRadius: 12,
+              borderColor: '#0783FF',
+              textAlign: 'left',
+              fontSize: 14,
+              padding: 10,
+              borderWidth: 2
+            }
+          }}
+          placeholder="Event Destination"
+          onPress={(data, details = null) => {
+            setDestination(data.description)
+          }}
+          query={{
+            key: mapsApiKey,
+            language: 'en',
+          }}
+        />
+        {Platform.OS === 'android' && <AndroidDateTime />}
+        {Platform.OS === 'ios' &&
+          <View>
+            <Text style={styles.dateTimeText}>Select Event Date</Text>
+            <RNDateTimePicker
+              mode="date"
+              display="default"
+              value={date}
+              onChange={onDateChange}
+              style={styles.dateTimePicker}
+            />
+            <Text style={styles.dateTimeText}>Select Event Time</Text>
+            <RNDateTimePicker
+              mode="time"
+              display="default"
+              value={time}
+              onChange={onTimeChange}
+              style={styles.dateTimePicker}
+            />
+          </View>
+        }
+        <TouchableOpacity style={styles.button} onPress={() => onCreateEventHandler()}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   )
 }
 const styles = StyleSheet.create({
@@ -374,8 +397,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
-    bottom: 40,
     elevation: 2,
   },
   buttonText: {
@@ -400,5 +421,6 @@ const styles = StyleSheet.create({
   },
   dateTimePicker: {
     marginBottom: 10,
+    alignSelf: 'center'
   },
 })

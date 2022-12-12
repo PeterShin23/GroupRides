@@ -1,37 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Platform, ToastAndroid, Alert, ScrollView } from 'react-native';
-// import { darkTheme } from '../../utils/colors';
+import React, { useState, useEffect } from 'react'
+import { StyleSheet, Text, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Platform, ToastAndroid, Alert, ScrollView } from 'react-native'
 import Slider from '@react-native-community/slider';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { getDatabase, ref, onValue, set, get, update } from 'firebase/database';
 import { auth, db, mapsApiKey } from '../../firebase';
 import { LogBox } from 'react-native';
-import uid from '../../utils/uid';
+import { update, get, ref } from 'firebase/database';
 
+const RideInfoScreen = ({ route, navigation }) => {
+    const { rideInfo, eventData, userType } = route.params
 
-export default function NewDriverScreen({ route, navigation }) {
-
-    const { eventData } = route.params
-    const user = auth.currentUser
-
-    // car information
-    const [brand, setBrand] = useState('')
-    const [color, setColor] = useState('')
-    const [type, setType] = useState('')
-    const [seatCount, setSeatCount] = useState(0)
+    const [brand, setBrand] = useState(rideInfo.brand)
+    const [color, setColor] = useState(rideInfo.color)
+    const [type, setType] = useState(rideInfo.type)
+    const [seatCount, setSeatCount] = useState(rideInfo.seatCount)
 
     // pick up information
-    const [pickupName, setPickupName] = useState('')
-    const [pickupAddress, setPickupAddress] = useState('')
-    // const [pickupTimePlaceholder, setPickupTimePlaceholder] = useState('')
-    // const [pickupTime, setPickupTime] = useState('')
+    const [pickupName, setPickupName] = useState(rideInfo.pickupName)
+    const [pickupAddress, setPickupAddress] = useState(rideInfo.pickupAddress)
+
     // time
     const [timeText, setTimeText] = useState('Select Event Time')
     const [timeOpen, setTimeOpen] = useState(false)
+    // TODO: set displayed time as rideInfo.pickupTime
     const [time, setTime] = useState(new Date())
-    const [location, setLocation] = useState(null);
-    const [errorMsg, setErrorMsg] = useState(null);
+
+    const user = auth.currentUser
+
+    useEffect(() => {
+        LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
+        // console.log(pickupTimePlaceholder)
+    }, []);
 
     const onTimeChange = (event, selectedTime) => {
         const currentTime = selectedTime || time;
@@ -54,71 +53,6 @@ export default function NewDriverScreen({ route, navigation }) {
         setTimeText(formattedTime)
     }
 
-    useEffect(() => {
-        // console.log(eventData)
-        getUserCarInformation();
-        setDefaultTime();
-        LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
-        // console.log(pickupTimePlaceholder)
-    }, []);
-
-    // set with default if available
-    function getUserCarInformation() {
-        // try to retrieve user's car information
-        const userCarRef = ref(db, `user2car/${user.uid}`)
-        onValue(userCarRef, (snapshot) => {
-            if (!snapshot.exists()) {
-                // This means that we are not going to prefill any text fields
-                console.log("User does not have saved car information.")
-            } else {
-                // retrieve and set information
-                setBrand(snapshot.val()['brand'])
-                setColor(snapshot.val()['color'])
-                setType(snapshot.val()['type'])
-                // TODO: This is stupid
-                // Bug is: if i set and come back to screen, seatcount is set to value in db
-                // if i update it, then come back to screen, seatcount is set to 0
-                setSeatCount(snapshot.val()['seatCount'])
-            }
-        })
-    }
-
-    function setDefaultTime() {
-        const orgEventRef = ref(db, `organizationEvents/${eventData['orgId']}/${eventData['eventId']}`)
-        onValue(orgEventRef, (snapshot) => {
-
-            // let's get event time information
-            const date = snapshot.val()['date'].split('/')
-
-            // let's set the date time like what Google does and set all events being set as 8:00AM
-            const year = parseInt(date[0])
-            const monthIndex = parseInt(date[1]) - 1 // 0-indexing
-            const day = parseInt(date[2])
-            setTime(new Date(year, monthIndex, day, 8))
-            setTimeText('8:00AM')
-        })
-    }
-
-    const AndroidDateTime = () => {
-        return (
-            <View>
-                <Text style={styles.dateTimeText}>Select Pickup Time</Text>
-                <TouchableOpacity style={styles.dateTimeButton} onPress={() => setTimeOpen(true)}>
-                    <Text style={{ fontSize: 16, color: '#000' }}>{timeText}</Text>
-                </TouchableOpacity>
-                {timeOpen &&
-                    <RNDateTimePicker
-                        mode="time"
-                        display="default"
-                        value={time}
-                        onChange={onTimeChange}
-                        style={styles.dateTimePicker}
-                    />
-                }
-            </View>
-        )
-    }
-
     function isEmptyString(input) {
         return input.trim().length === 0
     }
@@ -130,19 +64,16 @@ export default function NewDriverScreen({ route, navigation }) {
             return
         }
 
-
         // if user is driver, they can't be rider
         // if they are rider, they can't be driver
-        const user2eventRef = ref(db, `user2event/${user.uid}/${eventData['eventId']}`)
+        const user2eventRef = ref(db, `user2event/${user.uid}/${eventData['id']}`)
 
         get(user2eventRef).then((snapshot) => {
             if (!snapshot.exists()) {
                 console.log('user is not part of this organization event')
             } else {
                 // change type to 'driver'
-                update(user2eventRef, {
-                    type: 'driver'
-                })
+                const updates = {}
 
                 // add/update driver information
                 const date = time.toLocaleDateString().split('/')
@@ -157,7 +88,6 @@ export default function NewDriverScreen({ route, navigation }) {
                 }
                 const formattedDate = `${year}/${month}/${day}`
 
-                const user2eventDriverRef = ref(db, `user2event/${user.uid}/${eventData['eventId']}/driverInformation`)
                 const driverInformation = {
                     brand: brand,
                     color: color,
@@ -168,20 +98,23 @@ export default function NewDriverScreen({ route, navigation }) {
                     pickupDate: formattedDate,
                     pickupTime: time.toLocaleTimeString(),
                 }
-                set(user2eventDriverRef, driverInformation)
 
-                // add/update ride for event <- TODO: FIGURE OUT BETTER WAY
-                const rideId = uid()
-                const eventRidesRef = ref(db, `eventRides/${eventData['orgId']}/${eventData['eventId']}/${rideId}`)
-                const eventRide = {
-                    rideId: rideId,
-                    driver: user.uid,
-                    riderCount: 0
+                const user2event = {
+                    driverInformation: driverInformation,
+                    type: 'driver'
                 }
-                set(eventRidesRef, eventRide)
 
+                updates[`user2event/${user.uid}/${eventData['id']}`] = user2event
+
+                const eventRide = {
+                    rideId: rideInfo.rideId,
+                    driver: user.uid,
+                    riderCount: rideInfo.riderCount
+                }
+                updates[`eventRides/${eventData['orgId']}/${eventData['id']}/${rideInfo.rideId}`] = eventRide
+                update(ref(db), updates)
                 // let the user know that it saved
-                let saveMessage = "Thanks for Driving!"
+                let saveMessage = "Changes Saved!"
                 if (Platform.OS === 'android') {
                     ToastAndroid.show(saveMessage, ToastAndroid.SHORT)
                 } else {
@@ -193,55 +126,28 @@ export default function NewDriverScreen({ route, navigation }) {
         })
     }
 
-    return (
-        <KeyboardAvoidingView style={styles.body} behavior="padding">
-            <ScrollView style={{ width: "90%" }} keyboardShouldPersistTaps={'always'} >
-                <Text style={styles.eventTimeText}>Event Start Time: {eventData['time']}</Text>
-                <Text style={styles.subheaders}>Vehicle Description</Text>
-                <View style={{ flexDirection: 'row'}}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.inputLabels}>Car Brand</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Car Brand"
-                            value={brand}
-                            onChangeText={(value) => setBrand(value)}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.inputLabels}>Car Type</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Car Type"
-                            value={type}
-                            onChangeText={(value) => setType(value)}
-                        />
-                    </View>
+    const RiderView = () => {
+        return (
+            <View>
+                <Text style={styles.inputLabels}>Pickup Location</Text>
+                <View style={styles.textContainer}>
+                    <Text style={styles.pickupText}>{pickupName}</Text>
                 </View>
-                <View style={{ flexDirection: 'row' }}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.inputLabels}>Car Color</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Car Color"
-                            value={color}
-                            onChangeText={(value) => setColor(value)}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.inputLabels}>Seats Available: {(seatCount)}</Text>
-                        <Slider
-                            style={{ width: 170, height: 50 }}
-                            step={1}
-                            value={seatCount}
-                            minimumValue={0}
-                            maximumValue={7}
-                            onValueChange={(value) => setSeatCount(value)}
-                            thumbTintColor={'#0783FF'}
-                        />
-                    </View>
+                <Text style={styles.inputLabels}>Pickup Address</Text>
+                <View style={styles.textContainer}>
+                    <Text style={styles.pickupText}>{pickupAddress}</Text>
                 </View>
-                <Text style={styles.subheaders}>Pickup Information</Text>
+                <Text style={styles.inputLabels}>Pickup Time</Text>
+                <View style={styles.textContainer}>
+                    <Text style={styles.pickupText}>{rideInfo.pickupTime}</Text>
+                </View>
+            </View>
+        )
+    }
+
+    const DriverView = () => {
+        return (
+            <View>
                 <Text style={styles.inputLabels}>Where will you pick up?</Text>
                 <GooglePlacesAutocomplete
                     styles={{
@@ -259,7 +165,7 @@ export default function NewDriverScreen({ route, navigation }) {
                             borderWidth: 2,
                         },
                     }}
-                    placeholder="Pick up location"
+                    placeholder={pickupName}
                     onPress={(data, details = null) => {
                         setPickupName(data.description)
                     }}
@@ -285,7 +191,7 @@ export default function NewDriverScreen({ route, navigation }) {
                             borderWidth: 2
                         }
                     }}
-                    placeholder="Pick up address"
+                    placeholder={pickupAddress}
                     onPress={(data, details = null) => {
                         setPickupAddress(data.description)
                     }}
@@ -308,12 +214,70 @@ export default function NewDriverScreen({ route, navigation }) {
                     </View>
                 }
                 <TouchableOpacity style={styles.button} onPress={() => saveDriverInfo()}>
-                    <Text style={styles.buttonText}>Let's Drive</Text>
+                    <Text style={styles.buttonText}>Update Info</Text>
                 </TouchableOpacity>
+            </View>
+        )
+    }
+
+    return (
+        <KeyboardAvoidingView style={styles.body} behavior="padding">
+            <ScrollView style={{ width: "90%" }} keyboardShouldPersistTaps={'always'} >
+                <Text style={styles.eventTimeText}>Event Start Time: {eventData['time']}</Text>
+                <Text style={styles.subheaders}>Vehicle Description</Text>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabels}>Car Brand</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Car Brand"
+                            value={brand}
+                            editable={false}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabels}>Car Type</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Car Type"
+                            value={type}
+                            editable={false}
+                        />
+                    </View>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabels}>Car Color</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Car Color"
+                            value={color}
+                            editable={false}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabels}>Seats Available: {(seatCount)}</Text>
+                        <Slider
+                            style={{ width: 170, height: 50 }}
+                            step={1}
+                            value={seatCount}
+                            disabled={true}
+                            minimumValue={0}
+                            maximumValue={7}
+                            onValueChange={(value) => setSeatCount(value)}
+                            thumbTintColor={'#0783FF'}
+                        />
+                    </View>
+                </View>
+                <Text style={styles.subheaders}>Pickup Information</Text>
+                {
+                    user.uid == rideInfo.driverid ? <DriverView /> : <RiderView />
+                }
             </ScrollView>
         </KeyboardAvoidingView>
     )
 }
+
 const styles = StyleSheet.create({
     body: {
         flex: 1,
@@ -328,10 +292,10 @@ const styles = StyleSheet.create({
         marginLeft: 10
     },
     subheaders: {
-        marginTop: 5, 
-        fontSize: 16, 
-        fontWeight: '500', 
-        marginBottom: 10, 
+        marginTop: 5,
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 10,
         textAlign: 'center'
     },
     input: {
@@ -384,4 +348,19 @@ const styles = StyleSheet.create({
         fontWeight: '300',
         textAlign: 'center'
     },
+    textContainer: {
+        width: '100%',
+        flex: 1,
+        marginBottom: 10
+    },
+    pickupText: {
+        borderRadius: 12,
+        borderColor: '#0783FF',
+        textAlign: 'left',
+        fontSize: 14,
+        padding: 10,
+        borderWidth: 2
+    },
 })
+
+export default RideInfoScreen

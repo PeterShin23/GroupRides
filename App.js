@@ -1,13 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, Pressable, Button, Platform, SafeAreaView, Modal } from 'react-native';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
-import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { NavigationContainer, TabActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // https://ionic.io/ionicons
-
 // import { darkTheme } from './utils/colors';
 import EventListScreen from './src/screens/eventListScreen';
 import OrgListScreen from './src/screens/orgListScreen';
@@ -20,21 +19,21 @@ import OrgInfoScreen from './src/screens/orgInfoScreen';
 import EventInfoScreen from './src/screens/eventInfoScreen';
 import CarInfoScreen from './src/screens/carInfoScreen';
 import NewDriverScreen from './src/screens/newDriverScreen';
+import RideInfoScreen from './src/screens/rideInfoScreen';
 
 const bottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
 // "Home" screens need to be nested in a stack navigator for login/register func.
-function Home({navigation}) {
+function Home({ navigation }) {
 
   return (
     <bottomTab.Navigator
-      screenOptions={ ({ route }) => ({
+      screenOptions={({ route }) => ({
         tabBarIcon: ({ focused }) => {
-          let iconName; 
+          let iconName;
           let iconSize;
           let iconColor;
-          
+
           if (route.name === 'My Events') {
             iconName = focused
               ? 'today'
@@ -45,7 +44,7 @@ function Home({navigation}) {
             iconColor = focused
               ? '#49b3b3'
               : '#000'
-          } 
+          }
           else if (route.name === 'My Organizations') {
             iconName = focused
               ? 'earth'
@@ -72,13 +71,13 @@ function Home({navigation}) {
           return <Ionicons name={iconName} size={iconSize} color={iconColor}></Ionicons>;
         },
         tabBarShowLabel: false,
-        })}>
-      <bottomTab.Screen 
-        name='My Events' 
-        component={EventListScreen} 
+      })}>
+      <bottomTab.Screen
+        name='My Events'
+        component={EventListScreen}
       ></bottomTab.Screen>
-      <bottomTab.Screen 
-        name='My Organizations' 
+      <bottomTab.Screen
+        name='My Organizations'
         component={OrgListScreen}
         options={{
           headerRight: () => (
@@ -95,7 +94,7 @@ function Home({navigation}) {
 }
 
 export default function App() {
-  
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
@@ -116,7 +115,7 @@ export default function App() {
         <Stack.Screen
           name="Home"
           component={Home}
-          options={{ 
+          options={{
             headerShown: false,
             headerBackVisible: false,
             gestureEnabled: false
@@ -132,15 +131,15 @@ export default function App() {
         <Stack.Screen
           name="Event Information"
           component={EventInfoScreen}
-          // options={{
-          //   headerRight: () => (
-          //     <View>
-          //       <TouchableOpacity style={styles.stackAddButton}>
-          //         <Text style={styles.stackHeaderRightText}>Be a Driver</Text>
-          //       </TouchableOpacity>
-          //     </View>
-          //   )
-          // }}
+        // options={{
+        //   headerRight: () => (
+        //     <View>
+        //       <TouchableOpacity style={styles.stackAddButton}>
+        //         <Text style={styles.stackHeaderRightText}>Be a Driver</Text>
+        //       </TouchableOpacity>
+        //     </View>
+        //   )
+        // }}
         />
         <Stack.Screen
           name="New Organization"
@@ -152,15 +151,15 @@ export default function App() {
         <Stack.Screen
           name="Organization Information"
           component={OrgInfoScreen}
-          // options={{
-          //   headerRight: () => (
-          //     <View>
-          //       <TouchableOpacity style={styles.stackAddButton}>
-          //         <Text style={styles.stackHeaderRightText}>New Event</Text>
-          //       </TouchableOpacity>
-          //     </View>
-          //   )
-          // }}
+        // options={{
+        //   headerRight: () => (
+        //     <View>
+        //       <TouchableOpacity style={styles.stackAddButton}>
+        //         <Text style={styles.stackHeaderRightText}>New Event</Text>
+        //       </TouchableOpacity>
+        //     </View>
+        //   )
+        // }}
         />
         <Stack.Screen
           name="Car Information"
@@ -171,6 +170,13 @@ export default function App() {
           component={NewDriverScreen}
           options={{
             headerTitle: "Be a Driver",
+          }}
+        />
+        <Stack.Screen
+          name='Ride Information'
+          component={RideInfoScreen}
+          options={{
+            headerTitle: "Ride Information"
           }}
         />
       </Stack.Navigator>
@@ -191,7 +197,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
     marginRight: 15,
   },
   headerRightText: {
@@ -205,7 +211,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#49b3b3',
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   stackHeaderRightText: {
     fontSize: 13,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight, TextInput, Pressable, Button, Platform, StatusBar, Dimensions,} from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TouchableHighlight, ToastAndroid} from 'react-native';
 // import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 // import Modal from 'react-native-modal';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -109,6 +109,20 @@ export default function OrgInfoScreen({ route, navigation }) {
     update(ref(db, `user2event/${user.uid}/${eventId}`), {
       favorite: !isFavorite
     }).then(() => {
+
+      let favoriteMessage = ""
+      if (!isFavorite) {
+        favoriteMessage = "Added to Favorites!"
+      }
+      else {
+        favoriteMessage = "Removed from Favorites"
+      }
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(favoriteMessage, ToastAndroid.SHORT)
+      } else {
+        Alert.alert(favoriteMessage)
+      }
+
       setRefresh(!refresh)
     })
   }
